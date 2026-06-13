@@ -439,10 +439,15 @@ textarea.field-input{resize:vertical;min-height:90px;}
       <span class="sidebar-tip">Dinheiro</span>
     </button>
     <div class="sidebar-sep"></div>
-    <button class="sidebar-btn" id="btn-export" onclick="exportAsImage()" title="Exportar como imagem">
+    <button class="sidebar-btn" id="btn-export" onclick="exportAsExcel()" title="Exportar sessão">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span class="sidebar-tip">Exportar JPG</span>
+      <span class="sidebar-tip">Exportar Excel</span>
     </button>
+    <button class="sidebar-btn" id="btn-import" onclick="importFromExcel()" title="Importar sessão">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span class="sidebar-tip">Importar Excel</span>
+    </button>
+    <input type="file" id="import-file-input" accept=".xlsx" style="display:none" onchange="handleImportFile(this)"/>
   </nav>
 
   <!-- MAIN -->
@@ -1407,22 +1412,15 @@ document.addEventListener('click',e=>{
 load();render();
 
 /* ══════════════════════════════════════════
-   EXPORT AS JPG — with filename popup
+   EXPORT AS EXCEL — with date popup
 ══════════════════════════════════════════ */
-function isMobileOrTablet(){
-  return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||
-    (navigator.maxTouchPoints>1&&/Mac/.test(navigator.userAgent));
-}
-
-function exportAsImage(){
-  // Build today's example placeholder
+function exportAsExcel(){
   const now=new Date();
   const dd=String(now.getDate()).padStart(2,'0');
   const mm=String(now.getMonth()+1).padStart(2,'0');
   const yy=String(now.getFullYear()).slice(2);
-  const exampleName=`${dd}.${mm}.${yy}`;
 
-  // Create export popup overlay
+  // Popup overlay
   const ov=document.createElement('div');
   ov.id='export-overlay';
   ov.style.cssText=`
@@ -1439,7 +1437,6 @@ function exportAsImage(){
     animation:slideUp 0.18s ease;position:relative;overflow:hidden;
   `;
 
-  // Rainbow top bar
   const topBar=document.createElement('div');
   topBar.style.cssText='height:10px;background:linear-gradient(to right,var(--gold),var(--teal-bright),var(--ember),var(--gold));border-radius:17px 17px 0 0;';
 
@@ -1450,7 +1447,7 @@ function exportAsImage(){
   title.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:800;color:var(--text);
     letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;
     border-bottom:3px solid var(--border-mid);display:flex;align-items:center;gap:10px;`;
-  title.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar Ficha`;
+  title.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar Sessão`;
 
   const lbl=document.createElement('div');
   lbl.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:700;
@@ -1469,7 +1466,7 @@ function exportAsImage(){
 
   const hint=document.createElement('div');
   hint.style.cssText='font-size:12px;color:var(--text-faint);font-weight:600;margin-top:7px;margin-bottom:4px;';
-  hint.textContent=isMobileOrTablet()?'A imagem será guardada na tua galeria.':'A imagem será guardada como JPG no teu dispositivo.';
+  hint.textContent='O ficheiro Excel poderá ser importado noutro dispositivo ou sessão.';
 
   inner.append(title,lbl,inp,hint);
 
@@ -1484,16 +1481,12 @@ function exportAsImage(){
   btnOk.className='btn btn-gold';
   btnOk.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar';
   btnOk.onclick=()=>{
-    const val=inp.value; // "YYYY-MM-DD"
-    let fullName;
-    if(val){
-      const [y,m,d]=val.split('-');
-      fullName=`Sessão ${d}.${m}.${y.slice(2)}`;
-    } else {
-      fullName=`Sessão ${dd}.${mm}.${yy}`;
-    }
+    const val=inp.value;
+    let sessionLabel;
+    if(val){const[y,m,d]=val.split('-');sessionLabel=`Sessão ${d}.${m}.${y.slice(2)}`;}
+    else{sessionLabel=`Sessão ${dd}.${mm}.${yy}`;}
     ov.remove();
-    doExport(fullName);
+    doExportExcel(sessionLabel);
   };
 
   footer.append(btnCancel,btnOk);
@@ -1501,97 +1494,195 @@ function exportAsImage(){
   ov.appendChild(box);
   document.body.appendChild(ov);
 
-  // Close on backdrop click
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')btnOk.click();if(e.key==='Escape')ov.remove();});
+}
 
-  // Allow Enter to confirm
-  inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter')btnOk.click();
-    if(e.key==='Escape')ov.remove();
+async function loadXLSX(){
+  if(window.XLSX)return;
+  await new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
   });
 }
 
-async function doExport(customName){
+async function doExportExcel(sessionLabel){
   const btn=document.getElementById('btn-export');
   if(btn){btn.disabled=true;btn.style.opacity='0.5';}
-  showToast('A gerar imagem… ⏳');
+  showToast('A preparar exportação… ⏳');
+  try{
+    await loadXLSX();
+    // Serialize entire state to a single JSON string stored in cell A1
+    const payload=JSON.stringify({chars:S.chars,activeId:S.activeId,exportedAt:new Date().toISOString(),session:sessionLabel});
+    const wb=XLSX.utils.book_new();
+    const wsData=[
+      ['Diário do Aventureiro — '+sessionLabel],
+      ['Exportado em',new Date().toLocaleString('pt-PT')],
+      [''],
+      ['DADOS (não editar)'],
+      [payload]
+    ];
+    const ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:120}];
+    XLSX.utils.book_append_sheet(wb,ws,'Sessão');
 
-  if(!window.html2canvas){
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      s.onload=resolve;s.onerror=reject;
-      document.head.appendChild(s);
+    // Also add a human-readable summary sheet
+    const c=getChar();
+    const summaryRows=[
+      ['Personagem','Raça','Classe','Nível','HP Atual','HP Máximo','HP Temp','Dinheiro (PO)','Notas'],
+    ];
+    S.chars.forEach(ch=>{
+      summaryRows.push([ch.name,ch.race,ch.class_,ch.level,ch.currentHP,ch.maxHP,ch.tempHP,ch.money||0,ch.notes||'']);
     });
-  }
+    const wsSummary=XLSX.utils.aoa_to_sheet(summaryRows);
+    wsSummary['!cols']=[{wch:20},{wch:14},{wch:16},{wch:8},{wch:10},{wch:10},{wch:10},{wch:14},{wch:40}];
+    XLSX.utils.book_append_sheet(wb,wsSummary,'Resumo');
 
-  const fileName=customName||'ficha';
-
-  // Build a temporary container with only the sections we want
-  const secInfo=document.getElementById('sec-info');
-  const secTok=document.getElementById('sec-tokens');
-  if(!secInfo||!secTok){
-    showToast('Secções não encontradas.');
+    XLSX.writeFile(wb,`${sessionLabel}.xlsx`);
+    showToast('Sessão exportada com sucesso! 📊');
+  }catch(err){
+    showToast('Erro ao exportar. Tenta novamente.');
+    console.error(err);
+  }finally{
     if(btn){btn.disabled=false;btn.style.opacity='';}
-    return;
   }
+}
 
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`
-    position:fixed;top:-9999px;left:0;
-    width:${secInfo.offsetWidth}px;
-    padding:24px;box-sizing:border-box;
-    background-color:#b9854c;
-    background-image:
-      radial-gradient(ellipse at 50% -10%,rgba(255,234,196,0.35) 0%,transparent 55%),
-      linear-gradient(165deg,#cf9d68 0%,#bb8650 45%,#a87642 100%);
-    font-family:'Quicksand',sans-serif;
-  `;
+/* ══════════════════════════════════════════
+   IMPORT FROM EXCEL
+══════════════════════════════════════════ */
+function importFromExcel(){
+  document.getElementById('import-file-input').click();
+}
 
-  wrap.appendChild(secInfo.cloneNode(true));
-  wrap.appendChild(secTok.cloneNode(true));
-  document.body.appendChild(wrap);
+async function handleImportFile(input){
+  const file=input.files&&input.files[0];
+  if(!file){return;}
+  input.value=''; // reset so same file can be re-selected
+
+  const btn=document.getElementById('btn-import');
+  if(btn){btn.disabled=true;btn.style.opacity='0.5';}
+  showToast('A importar… ⏳');
 
   try{
-    const canvas=await html2canvas(wrap,{
-      backgroundColor:'#b9854c',
-      scale:2,
-      useCORS:true,
-      allowTaint:true,
-      scrollX:0,
-      scrollY:0,
-      width:wrap.offsetWidth,
-      height:wrap.scrollHeight,
+    await loadXLSX();
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+
+    // Find the JSON payload (row with a string starting with '{"chars"')
+    let payload=null;
+    for(const row of rows){
+      for(const cell of row){
+        if(typeof cell==='string'&&cell.startsWith('{"chars"')){
+          payload=cell;break;
+        }
+      }
+      if(payload)break;
+    }
+
+    if(!payload){
+      showToast('Ficheiro inválido ou sem dados reconhecíveis.');
+      return;
+    }
+
+    const imported=JSON.parse(payload);
+    if(!imported.chars||!Array.isArray(imported.chars)){
+      showToast('Dados inválidos no ficheiro.');
+      return;
+    }
+
+    // Show confirmation popup
+    const sessionLabel=imported.session||'sessão importada';
+    const charNames=imported.chars.map(c=>c.name).join(', ');
+    showImportConfirm(sessionLabel,charNames,()=>{
+      S.chars=imported.chars;
+      S.activeId=imported.activeId||imported.chars[0].id;
+      // Ensure data integrity
+      S.chars.forEach(c=>{if(typeof c.money!=='number')c.money=0;if(!c.inventory)c.inventory=[];if(!c.tokens)c.tokens=[];if(!c.restConfig)c.restConfig={shortHP:5,longHP:0,longFullTokens:true};});
+      if(!S.chars.find(c=>c.id===S.activeId))S.activeId=S.chars[0].id;
+      save();render();
+      showToast('Sessão importada com sucesso! ⚔️');
     });
-
-    document.body.removeChild(wrap);
-
-    const jpegDataUrl=canvas.toDataURL('image/jpeg',0.92);
-
-    if(isMobileOrTablet()&&navigator.share){
-      const res=await fetch(jpegDataUrl);
-      const blob=await res.blob();
-      const file=new File([blob],`${fileName}.jpg`,{type:'image/jpeg'});
-      await navigator.share({files:[file],title:fileName});
-      showToast('Imagem partilhada / guardada! 📸');
-    } else {
-      const link=document.createElement('a');
-      link.download=`${fileName}.jpg`;
-      link.href=jpegDataUrl;
-      link.click();
-      showToast('Ficha exportada com sucesso! 📸');
-    }
-  } catch(err){
-    if(document.body.contains(wrap))document.body.removeChild(wrap);
-    if(err&&err.name==='AbortError'){
-      showToast('Exportação cancelada.');
-    } else {
-      showToast('Erro ao exportar. Tenta novamente.');
-      console.error(err);
-    }
-  } finally{
+  }catch(err){
+    showToast('Erro ao importar. Verifica o ficheiro.');
+    console.error(err);
+  }finally{
     if(btn){btn.disabled=false;btn.style.opacity='';}
   }
+}
+
+function showImportConfirm(sessionLabel,charNames,onConfirm){
+  const ov=document.createElement('div');
+  ov.style.cssText=`
+    position:fixed;inset:0;background:rgba(80,53,26,0.6);
+    z-index:1100;display:flex;align-items:center;justify-content:center;
+    padding:20px;backdrop-filter:blur(3px);animation:fadeIn 0.15s ease;
+  `;
+
+  const box=document.createElement('div');
+  box.style.cssText=`
+    background:var(--surface);border:3px solid var(--border-strong);
+    border-radius:20px;padding:0;max-width:420px;width:100%;
+    box-shadow:0 8px 0 rgba(101,67,33,0.18),0 16px 40px rgba(101,67,33,0.35);
+    animation:slideUp 0.18s ease;position:relative;overflow:hidden;
+  `;
+
+  const topBar=document.createElement('div');
+  topBar.style.cssText='height:10px;background:linear-gradient(to right,var(--teal),var(--gold),var(--teal-bright));border-radius:17px 17px 0 0;';
+
+  const inner=document.createElement('div');
+  inner.style.cssText='padding:28px 28px 0;';
+
+  const title=document.createElement('div');
+  title.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:800;color:var(--text);
+    letter-spacing:0.5px;margin-bottom:16px;padding-bottom:12px;
+    border-bottom:3px solid var(--border-mid);display:flex;align-items:center;gap:10px;`;
+  title.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar Sessão`;
+
+  const body=document.createElement('div');
+  body.style.cssText='text-align:center;padding:8px 0 4px;';
+
+  const icon=document.createElement('div');
+  icon.style.cssText='font-size:36px;margin-bottom:12px;';
+  icon.textContent='📥';
+
+  const msgSession=document.createElement('div');
+  msgSession.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;`;
+  msgSession.textContent=sessionLabel;
+
+  const msgChars=document.createElement('div');
+  msgChars.style.cssText='font-size:14px;color:var(--text-dim);font-weight:600;margin-bottom:6px;';
+  msgChars.textContent=`Personagens: ${charNames}`;
+
+  const warn=document.createElement('div');
+  warn.style.cssText='font-size:13px;color:var(--ember);font-weight:700;margin-top:10px;';
+  warn.textContent='⚠️ Isto vai substituir todos os dados actuais.';
+
+  body.append(icon,msgSession,msgChars,warn);
+  inner.append(title,body);
+
+  const footer=document.createElement('div');
+  footer.style.cssText='display:flex;gap:10px;justify-content:flex-end;padding:16px 28px 22px;';
+
+  const btnCancel=document.createElement('button');
+  btnCancel.className='btn btn-ghost';btnCancel.textContent='Cancelar';
+  btnCancel.onclick=()=>ov.remove();
+
+  const btnOk=document.createElement('button');
+  btnOk.className='btn btn-gold';
+  btnOk.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar';
+  btnOk.onclick=()=>{ov.remove();onConfirm();};
+
+  footer.append(btnCancel,btnOk);
+  box.append(topBar,inner,footer);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
 }
 </script>
 </body>

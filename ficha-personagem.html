@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diário do Aventureiro</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#b9854c;--bg2:#a3733e;--surface:#fbf1de;--surface2:#f3e1c4;--surface3:#e8cda1;
+  --gold:#f3bd56;--gold-dim:#dc9a35;--gold-light:#ffd57e;--gold-pale:#fff3da;
+  --ember:#ec6f63;--ember-bright:#f4877a;--ember-light:#ffb3a8;
+  --teal:#57b3a3;--teal-bright:#6ec6b7;--teal-light:#a6e4d8;
+  --purple:#a98ddb;--purple-light:#cdb6f2;
+  --text:#5c4128;--text-dim:#a4825f;--text-faint:#d8bd97;
+  --border:rgba(139,94,58,0.16);--border-mid:rgba(139,94,58,0.32);--border-strong:#b98a55;
+  --shadow:0 6px 16px rgba(101,67,33,0.22);--radius:16px;
+  --sidebar-w:64px;
+}
+html,body{height:100%;}
+body{
+  background-color:var(--bg);color:var(--text);
+  font-family:'Quicksand',sans-serif;font-size:17px;line-height:1.5;min-height:100vh;
+  background-image:
+    radial-gradient(ellipse at 50% -10%,rgba(255,234,196,0.35) 0%,transparent 55%),
+    repeating-linear-gradient(100deg,rgba(101,67,33,0.05) 0px,transparent 2px,transparent 46px,rgba(101,67,33,0.045) 48px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,0.04) 0px,transparent 3px,transparent 70px,rgba(101,67,33,0.04) 73px),
+    linear-gradient(165deg,#cf9d68 0%,#bb8650 45%,#a87642 100%);
+  background-attachment:fixed;
+}
+
+/* ── LAYOUT ROOT ── */
+.root-layout{display:flex;min-height:100vh;}
+
+/* ══════════════════════════════════════════
+   LEFT SIDEBAR — QUICK ACTIONS
+══════════════════════════════════════════ */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;
+  width:var(--sidebar-w);
+  background:linear-gradient(180deg,#c79a64,#a87642);
+  border-right:3px solid rgba(101,67,33,0.25);
+  box-shadow:4px 0 14px rgba(101,67,33,0.18);
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 0;gap:12px;
+  z-index:200;
+}
+.sidebar-logo{
+  font-size:26px;margin-bottom:4px;
+  filter:drop-shadow(0 2px 2px rgba(101,67,33,0.35));
+}
+.sidebar-sep{width:34px;height:3px;border-radius:2px;background:rgba(255,255,255,0.25);margin:2px 0;}
+.sidebar-btn{
+  position:relative;width:42px;height:42px;
+  border-radius:50%;border:2px solid var(--gold-dim);
+  background:var(--surface);color:var(--text);
+  cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 rgba(101,67,33,0.3);
+  transition:all 0.12s;
+}
+.sidebar-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 rgba(101,67,33,0.3);background:var(--gold-pale);}
+.sidebar-btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(101,67,33,0.3);}
+.sidebar-btn.active{border-color:var(--gold-light);background:var(--gold-pale);}
+.sidebar-tip{
+  position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);
+  background:var(--surface);border:2px solid var(--border-strong);
+  color:var(--text);font-family:'Baloo 2',sans-serif;font-size:11px;font-weight:700;
+  padding:6px 12px;border-radius:10px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity 0.15s;letter-spacing:0.5px;
+  box-shadow:0 3px 0 rgba(101,67,33,0.2);
+}
+.sidebar-btn:hover .sidebar-tip{opacity:1;}
+
+/* ── MAIN CONTENT (offset by sidebar) ── */
+.main-content{margin-left:var(--sidebar-w);flex:1;width:calc(100% - var(--sidebar-w));padding:20px 20px 70px 24px;display:flex;justify-content:center;}
+#app{width:100%;max-width:980px;}
+
+/* ══════════════════════════════════════════
+   TOP BAR (header + char switcher)
+══════════════════════════════════════════ */
+.top-bar{
+  display:flex;align-items:flex-start;justify-content:flex-end;
+  gap:16px;margin-bottom:20px;
+}
+.app-header{text-align:center;flex:1;padding:24px 0 16px;}
+.dragon-rule{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.dragon-rule::before,.dragon-rule::after{content:'';flex:1;height:0;border-top:3px solid rgba(101,67,33,0.15);}
+.dragon-rule span{font-size:26px;line-height:1;filter:drop-shadow(0 2px 2px rgba(101,67,33,0.35));}
+.app-title{font-family:'Baloo 2',sans-serif;font-size:clamp(20px,4vw,34px);font-weight:800;color:var(--text);letter-spacing:1px;text-shadow:0 2px 0 rgba(255,255,255,0.4);margin-bottom:4px;}
+.app-sub{font-family:'Baloo 2',sans-serif;font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;}
+
+/* CHARACTER SWITCHER (top-right) */
+.char-switcher-wrap{position:relative;flex-shrink:0;margin-top:20px;}
+.char-switcher-btn{
+  font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:700;
+  padding:10px 16px;border:2px solid var(--border-strong);
+  background:var(--surface);color:var(--text);
+  cursor:pointer;border-radius:14px;
+  display:flex;align-items:center;gap:8px;
+  transition:all 0.12s;white-space:nowrap;
+  box-shadow:0 3px 0 rgba(101,67,33,0.25);
+  min-width:150px;
+}
+.char-switcher-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 rgba(101,67,33,0.25);background:var(--gold-pale);}
+.char-switcher-btn.open{transform:translateY(1px);box-shadow:0 1px 0 rgba(101,67,33,0.25);}
+.char-switcher-btn .char-name-display{flex:1;text-align:left;}
+.char-switcher-btn .arrow{font-size:10px;color:var(--text-dim);transition:transform 0.15s;}
+.char-switcher-btn.open .arrow{transform:rotate(180deg);}
+.char-switcher-btn .hp-mini{font-size:10px;color:var(--text-dim);}
+
+.char-dropdown{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--surface);border:2px solid var(--border-strong);
+  border-radius:14px;min-width:200px;
+  box-shadow:0 8px 0 rgba(101,67,33,0.15),0 10px 24px rgba(101,67,33,0.3);
+  z-index:500;overflow:hidden;
+  animation:dropIn 0.15s ease;
+}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.char-dropdown-item{
+  font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:700;
+  padding:11px 16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background 0.1s;color:var(--text-dim);
+  border-bottom:2px solid var(--border);
+}
+.char-dropdown-item:last-child{border-bottom:none;}
+.char-dropdown-item:hover{background:var(--gold-pale);color:var(--text);}
+.char-dropdown-item.active{color:var(--text);background:var(--surface2);}
+.char-dropdown-item .char-drop-hp{font-size:11px;color:var(--text-faint);}
+.char-dropdown-add{
+  font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:700;
+  padding:11px 16px;cursor:pointer;
+  color:var(--gold-dim);border-top:2px solid var(--border-mid);
+  transition:background 0.1s;letter-spacing:0.5px;
+  background:var(--gold-pale);
+}
+.char-dropdown-add:hover{background:var(--gold-light);color:var(--text);}
+.tag{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;margin-left:4px;font-family:'Baloo 2',sans-serif;}
+.tag-dead{background:var(--ember);color:#fff;}
+.tag-full{background:var(--teal);color:#fff;}
+
+/* ══════════════════════════════════════════
+   PANELS
+══════════════════════════════════════════ */
+.panel{background:var(--surface);border:2px solid var(--border-mid);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;margin-bottom:18px;box-shadow:0 5px 0 rgba(101,67,33,0.12),0 8px 18px rgba(101,67,33,0.15);}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(to right,var(--gold),var(--teal-bright),var(--gold));opacity:0.55;}
+.panel-title{font-family:'Baloo 2',sans-serif;font-size:13px;font-weight:800;color:var(--text);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+/* ── COLLAPSIBLE DANGER PANEL ── */
+.danger-panel{background:var(--surface);border:2px solid var(--ember);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;position:relative;box-shadow:0 5px 0 rgba(101,67,33,0.12),0 8px 18px rgba(101,67,33,0.15);}
+.danger-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:repeating-linear-gradient(45deg,var(--ember) 0 10px,var(--gold-pale) 10px 20px);opacity:0.85;}
+.danger-toggle{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;background:transparent;border:none;
+  font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:800;
+  color:var(--ember);letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;text-align:left;transition:background 0.15s;
+}
+.danger-toggle:hover{background:var(--gold-pale);}
+.danger-toggle .dtoggle-left{display:flex;align-items:center;gap:8px;}
+.danger-toggle .dtoggle-arrow{font-size:10px;color:var(--ember);transition:transform 0.2s;}
+.danger-toggle.open .dtoggle-arrow{transform:rotate(180deg);}
+.danger-body{padding:0 20px 20px;display:none;}
+.danger-body.open{display:block;}
+
+/* ── COLLAPSIBLE REST PANEL ── */
+.rest-panel{background:var(--surface);border:2px solid var(--border-mid);border-radius:var(--radius);margin-top:18px;margin-bottom:18px;overflow:hidden;position:relative;box-shadow:0 5px 0 rgba(101,67,33,0.12),0 8px 18px rgba(101,67,33,0.15);}
+.rest-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(to right,var(--teal),var(--purple-light),var(--teal));opacity:0.7;}
+.rest-toggle{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:22px 20px 16px;background:transparent;border:none;
+  font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:800;
+  color:var(--teal);letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;text-align:left;transition:background 0.15s;
+}
+.rest-toggle:hover{background:var(--gold-pale);}
+.rest-toggle .rtoggle-left{display:flex;align-items:center;gap:8px;}
+.rest-toggle .rtoggle-arrow{font-size:10px;color:var(--teal);transition:transform 0.2s;}
+.rest-toggle.open .rtoggle-arrow{transform:rotate(180deg);}
+.rest-body{padding:0 20px 20px;display:none;}
+.rest-body.open{display:block;}
+
+/* ══════════════════════════════════════════
+   SECTION DIVIDERS
+══════════════════════════════════════════ */
+.section-divider{display:flex;align-items:center;gap:14px;margin:28px 0 16px;}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:0;border-top:3px solid rgba(101,67,33,0.15);}
+.section-divider-label{font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;color:#fff;text-transform:uppercase;white-space:nowrap;background:var(--ember);padding:7px 20px;border-radius:20px;border:2px solid rgba(101,67,33,0.15);box-shadow:0 3px 0 rgba(101,67,33,0.18);}
+.divider-icon{font-size:16px;filter:drop-shadow(0 2px 1px rgba(101,67,33,0.3));}
+
+/* ══════════════════════════════════════════
+   FORM
+══════════════════════════════════════════ */
+.field-label{font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+.field-input{width:100%;background:var(--surface2);border:2px solid var(--border-mid);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:600;font-size:16px;padding:9px 12px;border-radius:10px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+.field-input:focus{border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(243,189,86,0.25);}
+.field-input::placeholder{color:var(--text-faint);}
+select.field-input{cursor:pointer;}
+select.field-input option{background:var(--surface2);}
+textarea.field-input{resize:vertical;min-height:90px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.span-full{grid-column:1/-1;}
+.small-input{width:72px;background:var(--surface2);border:2px solid var(--border-mid);color:var(--text);font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;text-align:center;padding:7px 4px;border-radius:10px;outline:none;}
+.small-input:focus{border-color:var(--gold-dim);}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:13px;padding:10px 18px;border-radius:12px;cursor:pointer;border:2px solid;transition:transform 0.1s,box-shadow 0.1s,filter 0.1s;letter-spacing:0.3px;white-space:nowrap;box-shadow:0 4px 0 rgba(101,67,33,0.22);}
+.btn:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 5px 0 rgba(101,67,33,0.22);}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(101,67,33,0.22);}
+.btn-damage{background:var(--ember);border-color:#d9554a;color:#fff;}
+.btn-damage:hover{background:var(--ember-bright);}
+.btn-heal{background:var(--teal);border-color:#3f8f80;color:#fff;}
+.btn-heal:hover{background:var(--teal-bright);}
+.btn-ghost{background:var(--surface2);border-color:var(--border-mid);color:var(--text-dim);box-shadow:0 3px 0 rgba(101,67,33,0.12);}
+.btn-ghost:hover{border-color:var(--border-strong);color:var(--text);}
+.btn-gold{background:var(--gold);border-color:var(--gold-dim);color:#6a431a;font-weight:800;}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-danger{background:var(--gold-pale);border-color:var(--ember);color:var(--ember);}
+.btn-danger:hover{background:var(--ember);color:#fff;}
+.btn-short{background:var(--teal-light);border-color:var(--teal-bright);color:#2f6f63;}
+.btn-short:hover{background:var(--teal-bright);color:#fff;}
+.btn-long{background:var(--purple-light);border-color:var(--purple);color:#5c3f8f;}
+.btn-long:hover{background:var(--purple);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:11px;box-shadow:0 3px 0 rgba(101,67,33,0.22);}
+.btn-edit{background:var(--gold-pale);border-color:var(--gold-dim);color:#9c6a23;}
+.btn-edit:hover{background:var(--gold-light);color:#6a431a;}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:2px solid var(--border-mid);background:var(--surface2);color:var(--text-dim);cursor:pointer;font-size:18px;font-family:'Baloo 2',sans-serif;font-weight:800;transition:all 0.12s;display:inline-flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 3px 0 rgba(101,67,33,0.18);}
+.icon-btn:hover{border-color:var(--gold-dim);color:var(--text);background:var(--gold-pale);transform:translateY(-1px);}
+.icon-btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(101,67,33,0.18);}
+
+/* ══════════════════════════════════════════
+   HP
+══════════════════════════════════════════ */
+.hp-main{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;}
+.hp-orb-wrap{position:relative;flex-shrink:0;}
+.hp-orb{
+  width:130px;height:130px;border-radius:50%;
+  background:var(--surface2);
+  flex-shrink:0;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 0 rgba(101,67,33,0.15), inset 0 2px 8px rgba(101,67,33,0.08);
+}
+.hp-orb-inner{position:relative;z-index:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.hp-current{font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:800;line-height:1;color:var(--text);}
+.hp-slash{font-size:12px;color:var(--text-dim);font-weight:700;line-height:1.2;}
+.hp-orb-label{font-family:'Baloo 2',sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-top:2px;}
+.hp-pct-label{font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:800;margin-top:4px;letter-spacing:0.5px;}
+.hp-controls{flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px;}
+.hp-btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.hp-temp-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-dim);font-weight:600;flex-wrap:wrap;}
+.hp-set-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px;}
+.hp-set-label{font-size:14px;color:var(--text-dim);font-weight:600;white-space:nowrap;}
+
+/* ══════════════════════════════════════════
+   CHARACTER SHEET HEADER (Identidade + Vida + Dinheiro)
+══════════════════════════════════════════ */
+.sheet-header-body{display:grid;grid-template-columns:1fr 1fr auto;gap:0 24px;align-items:start;}
+.sheet-identity{grid-column:1/3;}
+.identity-name{font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px;word-break:break-word;}
+.identity-meta{font-family:'Baloo 2',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;}
+.identity-bio{margin-top:16px;}
+.identity-bio-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.identity-bio-label{font-family:'Baloo 2',sans-serif;font-size:11px;font-weight:800;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+.sheet-divider{display:none;}
+.sheet-col3{grid-column:3;display:flex;flex-direction:column;gap:14px;align-items:center;}
+.sheet-vida{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.vida-stats{display:flex;flex-direction:column;gap:4px;align-items:center;}
+.temp-hp-display{font-size:12px;color:#2f8f7e;font-family:'Baloo 2',sans-serif;font-weight:800;letter-spacing:0.5px;}
+.sheet-money{width:100%;}
+.sheet-money-box{background:var(--surface2);border:2px solid var(--border-mid);border-radius:14px;padding:12px 16px;text-align:center;box-shadow:0 3px 0 rgba(101,67,33,0.12);}
+.sheet-money-label{font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+.sheet-money-amount{font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;color:var(--text);}
+.sheet-money-unit{font-family:'Baloo 2',sans-serif;font-size:12px;font-weight:700;color:var(--text-dim);margin-left:4px;}
+
+/* ══════════════════════════════════════════
+   BIOGRAFIA
+══════════════════════════════════════════ */
+.bio-display{white-space:pre-wrap;color:var(--text);font-size:16px;font-weight:500;line-height:1.6;}
+.bio-empty{color:var(--text-faint);font-style:italic;}
+
+/* ══════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════ */
+.tokens-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.tokens-header-btns{display:flex;gap:8px;}
+.token-list{display:flex;flex-direction:column;gap:10px;}
+.token-card{background:var(--surface2);border:2px solid var(--border-mid);border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;transition:border-color 0.15s;box-shadow:0 3px 0 rgba(101,67,33,0.1);}
+.token-card:hover{border-color:var(--border-strong);}
+.token-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;border:2px solid rgba(101,67,33,0.2);}
+.token-name{font-family:'Baloo 2',sans-serif;font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:80px;}
+.token-desc{font-size:12px;color:var(--text-dim);flex-basis:100%;margin-top:-4px;}
+.token-controls{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.token-count{font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:800;color:var(--text);min-width:36px;text-align:center;}
+.token-max-lbl{font-size:12px;color:var(--text-dim);font-weight:600;}
+.token-pips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;flex-basis:100%;align-items:center;}
+.token-pip{width:20px;height:20px;border-radius:6px;border:3px solid;cursor:pointer;transition:all 0.1s;flex-shrink:0;}
+.token-pip.used{opacity:0.2;}
+.token-actions{display:flex;gap:6px;margin-left:auto;align-items:center;}
+.color-options{display:flex;gap:8px;flex-wrap:wrap;}
+.color-opt{width:26px;height:26px;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all 0.15s;}
+.color-opt.selected{border-color:var(--text);transform:scale(1.15);}
+
+/* ══════════════════════════════════════════
+   REST
+══════════════════════════════════════════ */
+.rest-cards{display:flex;gap:14px;flex-wrap:wrap;}
+.rest-card{flex:1;min-width:220px;background:var(--surface2);border:2px solid var(--border-mid);border-radius:14px;padding:18px;box-shadow:0 3px 0 rgba(101,67,33,0.1);}
+.rest-card-title{font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.rest-row{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:10px;flex-wrap:wrap;}
+.rest-input{width:58px;background:var(--surface);border:2px solid var(--border-mid);color:var(--text);font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;text-align:center;padding:5px 4px;border-radius:8px;outline:none;}
+.rest-input:focus{border-color:var(--gold-dim);}
+.short-token-select{margin-top:12px;padding-top:12px;border-top:3px solid var(--border-mid);}
+.short-token-select-title{font-family:'Baloo 2',sans-serif;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;}
+.short-tok-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.short-tok-name{font-family:'Baloo 2',sans-serif;font-size:13px;font-weight:700;color:var(--text);flex:1;min-width:80px;display:flex;align-items:center;gap:6px;}
+.short-tok-sel{background:var(--surface);border:2px solid var(--border-mid);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:600;font-size:14px;padding:5px 9px;border-radius:8px;outline:none;cursor:pointer;}
+.short-tok-sel:focus{border-color:var(--gold-dim);}
+
+/* ══════════════════════════════════════════
+   MODALS (popup)
+══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(80,53,26,0.55);
+  z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(2px);animation:fadeIn 0.15s ease;
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{
+  background:var(--surface);border:3px solid var(--border-strong);
+  border-radius:20px;padding:0;max-width:480px;width:100%;
+  max-height:90vh;display:flex;flex-direction:column;
+  position:relative;box-shadow:0 8px 0 rgba(101,67,33,0.18),0 16px 40px rgba(101,67,33,0.35);
+  animation:slideUp 0.18s ease;
+}
+.modal-inner{overflow-y:auto;padding:32px 28px 0;flex:1;overscroll-behavior:contain;}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;border-radius:17px 17px 0 0;background:linear-gradient(to right,var(--gold),var(--teal-bright),var(--ember),var(--gold));z-index:1;pointer-events:none;}
+.modal-title{font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:800;color:var(--text);letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid var(--border-mid);display:flex;align-items:center;gap:10px;padding-top:10px;}
+.modal-close{position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:var(--ember);border:3px solid var(--surface);color:#fff;cursor:pointer;font-size:14px;font-weight:800;transition:transform 0.12s;line-height:1;box-shadow:0 3px 0 rgba(101,67,33,0.25);display:flex;align-items:center;justify-content:center;z-index:2;}
+.modal-close:hover{transform:scale(1.1) rotate(90deg);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 28px 20px;flex-shrink:0;}
+
+/* delete modal specifically */
+.delete-modal-body{text-align:center;padding:10px 0 4px;}
+.delete-modal-icon{font-size:40px;margin-bottom:12px;filter:drop-shadow(0 3px 2px rgba(101,67,33,0.3));}
+.delete-modal-msg{font-size:16px;font-weight:600;color:var(--text-dim);margin-bottom:6px;}
+.delete-modal-name{font-family:'Baloo 2',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.delete-modal-warn{font-size:13px;color:var(--text-faint);font-weight:600;}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);border:2px solid var(--border-strong);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:700;font-size:15px;padding:13px 24px;border-radius:14px;z-index:1000;pointer-events:none;box-shadow:0 5px 0 rgba(101,67,33,0.18),var(--shadow);animation:slideUp 0.2s ease;max-width:300px;}
+
+/* ══════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════ */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;}
+
+/* ══════════════════════════════════════════
+   INVENTORY PANEL
+══════════════════════════════════════════ */
+.tokens-inventory-row{display:grid;grid-template-columns:1fr 2fr;gap:18px;align-items:start;}
+.tokens-inventory-row .panel{margin-bottom:0;}
+.inventory-panel{background:var(--surface);border:2px solid var(--border-mid);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;box-shadow:0 5px 0 rgba(101,67,33,0.12),0 8px 18px rgba(101,67,33,0.15);}
+.inventory-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(to right,var(--gold),var(--purple-light),var(--gold));opacity:0.55;}
+.inventory-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:10px;max-height:460px;overflow-y:auto;}
+.inventory-item{display:flex;flex-direction:column;align-items:center;text-align:center;aspect-ratio:4/5;background:var(--surface2);border:2px solid var(--border-mid);border-radius:14px;padding:13px 10px 10px;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:0 3px 0 rgba(101,67,33,0.1);cursor:pointer;position:relative;overflow:hidden;}
+.inventory-item::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--gold),var(--purple-light));opacity:0.6;border-radius:12px 12px 0 0;}
+.inventory-item:hover{border-color:var(--border-strong);box-shadow:0 5px 0 rgba(101,67,33,0.15);}
+.inventory-item-name{font-family:'Baloo 2',sans-serif;font-size:13px;font-weight:800;color:var(--text);line-height:1.2;margin-top:4px;width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.inventory-item-icon{font-size:32px;margin:auto 0;line-height:1;}
+.inventory-item-cat{font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);margin-top:2px;}
+.inventory-item-desc{font-size:10px;color:var(--text-dim);font-weight:600;margin-top:3px;width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;}
+.inventory-item-qty-badge{position:absolute;top:6px;right:6px;background:var(--gold);color:#6a431a;font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px;line-height:1.5;}
+.inventory-item-del{background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:14px;padding:2px 4px;border-radius:6px;transition:color 0.12s,background 0.12s;line-height:1;}
+.inventory-item-del:hover{color:var(--ember);background:var(--gold-pale);}
+.inventory-empty{text-align:center;padding:24px 0;color:var(--text-faint);font-size:13px;grid-column:1/-1;}
+.inventory-gold-total{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-family:'Baloo 2',sans-serif;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;}
+
+/* ── EMOJI PICKER ── */
+.emoji-picker-wrap{grid-column:1/-1;}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:700px){
+  :root{--sidebar-w:52px;}
+  .main-content{padding:12px 10px 60px 12px;}
+  .form-grid{grid-template-columns:1fr;}
+  .rest-cards{flex-direction:column;}
+  .sheet-header-body{grid-template-columns:1fr;}
+  .sheet-identity{grid-column:1;}
+  .sheet-col3{grid-column:1;flex-direction:row;flex-wrap:wrap;justify-content:center;}
+  .hp-orb{width:100px;height:100px;}
+  .hp-current{font-size:26px;}
+  .tokens-inventory-row{flex-direction:column;}
+  .inventory-panel{width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="root-layout">
+
+  <!-- LEFT SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <!-- shield/book icon -->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:rgba(255,255,255,0.85);filter:drop-shadow(0 2px 2px rgba(101,67,33,0.4))"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="sidebar-sep"></div>
+    <!-- Quick actions -->
+    <button class="sidebar-btn" onclick="doShortRest()" title="Descanso Curto">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <span class="sidebar-tip">Descanso Curto</span>
+    </button>
+    <button class="sidebar-btn" onclick="doLongRest()" title="Descanso Longo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span class="sidebar-tip">Descanso Longo</span>
+    </button>
+    <div class="sidebar-sep"></div>
+    <button class="sidebar-btn" onclick="openDamageModal()" title="Dano">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 9H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5S16.33 9 15.5 9z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8H3.5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 15H10v-1.5c0-.83-.67-1.5-1.5-1.5S7 12.67 7 13.5 7.67 15 8.5 15z"/></svg>
+      <span class="sidebar-tip">Dano</span>
+    </button>
+    <button class="sidebar-btn" onclick="openHealModal()" title="Cura">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+      <span class="sidebar-tip">Cura</span>
+    </button>
+    <button class="sidebar-btn" onclick="openMoneyModal()" title="Dinheiro">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span class="sidebar-tip">Dinheiro</span>
+    </button>
+    <div class="sidebar-sep"></div>
+    <button class="sidebar-btn" id="btn-export" onclick="exportAsImage()" title="Exportar como imagem">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="sidebar-tip">Exportar JPG</span>
+    </button>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div id="app"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<!-- MODAL CONTAINER -->
+<div id="modal-root"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA / STATE
+══════════════════════════════════════════ */
+const TOKEN_COLORS=['#c8973a','#d4410f','#26907a','#9060d0','#2980b9','#e67e22','#27ae60','#e91e63','#607d8b','#ff5722'];
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+
+function newChar(){
+  return{id:uid(),name:'Novo Aventureiro',race:'',class_:'',level:'1',
+    maxHP:20,currentHP:20,tempHP:0,money:0,tokens:[],inventory:[],
+    restConfig:{shortHP:5,longHP:0,longFullTokens:true},notes:''};
+}
+function newToken(){
+  return{id:uid(),name:'Espaços de Magia',description:'',max:3,current:3,
+    color:TOKEN_COLORS[0],shortRestore:'0',longRestore:'full'};
+}
+function getHPColor(p){if(p>0.6)return'var(--teal-bright)';if(p>0.3)return'var(--gold)';return'var(--ember-light)';}
+
+let S={
+  chars:[],activeId:'',
+  charDropOpen:false,
+  editTokenId:null,   // token being edited
+  newTok:newToken(),
+  editTokData:null,
+  dangerOpen:false,
+  restOpen:false,
+  // inventory modals
+  showAddInvModal:false,newInvItem:null,
+  showEditInvModal:false,editInvId:null,editInvData:null,
+  // modals
+  showDeleteModal:false,
+  showAddTokenModal:false,
+  showEditTokenModal:false,
+  showEditCharModal:false,editCharData:null,
+  showDamageModal:false,damageAmount:'',
+  showHealModal:false,healAmount:'',
+  showMoneyModal:false,moneyAmount:'',moneyType:'add',
+};
+
+function load(){
+  try{const s=localStorage.getItem('dnd_pt_v3');if(s){const p=JSON.parse(s);S.chars=p.chars||[];S.activeId=p.activeId||'';}
+  }catch(e){}
+  S.chars.forEach(c=>{if(typeof c.money!=='number')c.money=0;if(!c.inventory)c.inventory=[];});
+  if(S.chars.length&&!S.chars.find(c=>c.id===S.activeId))S.activeId=S.chars[0].id;
+}
+function save(){localStorage.setItem('dnd_pt_v3',JSON.stringify({chars:S.chars,activeId:S.activeId}));}
+function getChar(){return S.chars.find(c=>c.id===S.activeId)||S.chars[0];}
+function updateChar(patch){const c=getChar();if(!c)return;Object.assign(c,patch);save();render();}
+
+/* ── TOAST ── */
+let toastTimer=null;
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.style.display='none';},2700);}
+
+/* ── ACTIONS ── */
+function changeHP(delta){
+  const c=getChar();
+  const origTemp=c.tempHP;
+  let eff=delta,temp=origTemp;
+  if(delta<0&&temp>0){const a=Math.min(temp,-delta);temp-=a;eff+=a;}
+  const next=Math.max(0,Math.min(c.maxHP,c.currentHP+eff));
+  updateChar({currentHP:next,tempHP:temp});
+  const ab=origTemp-temp;
+  if(delta<0)showToast(`${-delta} dano recebido${ab>0?` (${ab} absorvido por HP temp.)`:''}`)
+  else showToast(`+${delta} HP curado`);
+}
+
+function doShortRest(){
+  const c=getChar();
+  const newHP=Math.min(c.maxHP,c.currentHP+(c.restConfig.shortHP||0));
+  const newTokens=c.tokens.map(t=>{
+    const sr=t.shortRestore;
+    if(sr==='full')return{...t,current:t.max};
+    const g=parseInt(sr)||0;
+    return{...t,current:Math.min(t.max,t.current+g)};
+  });
+  updateChar({currentHP:newHP,tokens:newTokens});
+  showToast(`Descanso Curto: +${c.restConfig.shortHP||0} HP, recursos restaurados!`);
+}
+function doLongRest(){
+  const c=getChar();
+  const hg=c.restConfig.longHP===0?c.maxHP:c.restConfig.longHP;
+  const newHP=Math.min(c.maxHP,c.currentHP+hg);
+  const newTokens=c.tokens.map(t=>{
+    if(c.restConfig.longFullTokens)return{...t,current:t.max};
+    if(t.longRestore==='full')return{...t,current:t.max};
+    return{...t,current:Math.min(t.max,t.current+(parseInt(t.longRestore)||0))};
+  });
+  updateChar({currentHP:newHP,tokens:newTokens,tempHP:0});
+  showToast('Descanso Longo: totalmente restaurado!');
+}
+function toggleDanger(){S.dangerOpen=!S.dangerOpen;render();}
+function toggleRest(){S.restOpen=!S.restOpen;render();}
+
+function addChar(){const c=newChar();S.chars.push(c);S.activeId=c.id;S.charDropOpen=false;save();render();}
+function switchChar(id){S.activeId=id;S.charDropOpen=false;save();render();}
+function deleteChar(){
+  if(S.chars.length===1){showToast('Não podes apagar o teu único personagem!');closeModal();return;}
+  S.chars=S.chars.filter(c=>c.id!==S.activeId);
+  S.activeId=S.chars[0].id;
+  closeModal();save();render();
+  showToast('Personagem apagado.');
+}
+function adjustToken(tid,delta){
+  const c=getChar();
+  updateChar({tokens:c.tokens.map(t=>t.id===tid?{...t,current:Math.max(0,Math.min(t.max,t.current+delta))}:t)});
+}
+function pipClick(tid,idx){
+  const c=getChar();
+  updateChar({tokens:c.tokens.map(t=>{
+    if(t.id!==tid)return t;
+    const nv=idx<t.current?idx:idx+1;
+    return{...t,current:Math.max(0,Math.min(t.max,nv))};
+  })});
+}
+function setTokenFull(tid){const c=getChar();updateChar({tokens:c.tokens.map(t=>t.id===tid?{...t,current:t.max}:t)});}
+function removeToken(tid){const c=getChar();updateChar({tokens:c.tokens.filter(t=>t.id!==tid)});}
+function updateTokenShortRestore(tid,val){const c=getChar();updateChar({tokens:c.tokens.map(t=>t.id===tid?{...t,shortRestore:val}:t)});}
+
+/* ── MODALS ── */
+function closeModal(){
+  S.showDeleteModal=false;S.showAddTokenModal=false;S.showEditTokenModal=false;
+  S.showEditCharModal=false;S.editCharData=null;
+  S.showDamageModal=false;S.damageAmount='';
+  S.showHealModal=false;S.healAmount='';
+  S.showMoneyModal=false;S.moneyAmount='';S.moneyType='add';
+  S.editTokenId=null;S.editTokData=null;
+  S.showAddInvModal=false;S.newInvItem=null;
+  S.showEditInvModal=false;S.editInvId=null;S.editInvData=null;
+  renderModal();
+}
+function openDeleteModal(){S.showDeleteModal=true;renderModal();}
+function openAddTokenModal(){S.newTok=newToken();S.showAddTokenModal=true;renderModal();}
+
+/* Edit character (identity + vida + dinheiro) */
+function openEditCharModal(){
+  const c=getChar();
+  S.editCharData={name:c.name,race:c.race,class_:c.class_,level:c.level,
+    maxHP:c.maxHP,currentHP:c.currentHP,tempHP:c.tempHP,money:c.money,notes:c.notes||''};
+  S.showEditCharModal=true;renderModal();
+}
+function saveEditChar(){
+  const d=S.editCharData;
+  const maxHP=Math.max(1,parseInt(d.maxHP)||1);
+  const currentHP=Math.max(0,Math.min(maxHP,parseInt(d.currentHP)||0));
+  const tempHP=Math.max(0,parseInt(d.tempHP)||0);
+  const money=Math.max(0,parseFloat(d.money)||0);
+  updateChar({name:d.name.trim()||'Aventureiro',race:d.race,class_:d.class_,level:d.level,
+    maxHP,currentHP,tempHP,money,notes:d.notes});
+  closeModal();showToast('Personagem atualizado!');
+}
+
+
+/* Quick action: Dano */
+function openDamageModal(){S.damageAmount='';S.showDamageModal=true;renderModal();}
+function confirmDamage(){
+  const v=Math.max(0,parseInt(S.damageAmount)||0);
+  if(v<=0){showToast('Indica uma quantidade de dano.');return;}
+  changeHP(-v);
+  closeModal();
+}
+
+/* Quick action: Cura */
+function openHealModal(){S.healAmount='';S.showHealModal=true;renderModal();}
+function confirmHeal(){
+  const v=Math.max(0,parseInt(S.healAmount)||0);
+  if(v<=0){showToast('Indica uma quantidade de cura.');return;}
+  changeHP(v);
+  closeModal();
+}
+
+/* Quick action: Dinheiro */
+function openMoneyModal(){S.moneyAmount='';S.moneyType='add';S.showMoneyModal=true;renderModal();}
+function confirmMoney(){
+  const v=Math.max(0,parseFloat(S.moneyAmount)||0);
+  if(v<=0){showToast('Indica uma quantidade de dinheiro.');return;}
+  const c=getChar();
+  const delta=S.moneyType==='add'?v:-v;
+  const next=Math.max(0,(c.money||0)+delta);
+  updateChar({money:next});
+  showToast(S.moneyType==='add'?`+${v} PO recebidas!`:`−${v} PO gastas!`);
+  closeModal();
+}
+
+function openEditTokenModal(tid){
+  const c=getChar();const tok=c.tokens.find(t=>t.id===tid);
+  if(!tok)return;
+  S.editTokenId=tid;S.editTokData={...tok};
+  S.showEditTokenModal=true;renderModal();
+}
+function saveEditToken(){
+  const c=getChar();
+  const d=S.editTokData;
+  d.max=Math.max(1,parseInt(d.max)||1);
+  d.current=Math.min(d.current,d.max);
+  updateChar({tokens:c.tokens.map(t=>t.id===S.editTokenId?{...d}:t)});
+  closeModal();showToast(`${d.name} atualizado!`);
+}
+function confirmAddToken(){
+  const t=S.newTok;
+  if(!t.name.trim()){showToast('Dá um nome ao token!');return;}
+  const tok={...t,id:uid(),max:parseInt(t.max)||1,current:parseInt(t.max)||1};
+  const c=getChar();
+  updateChar({tokens:[...c.tokens,tok]});
+  closeModal();showToast(`${tok.name} adicionado!`);
+}
+
+/* ══════════════════════════════════════════
+   MINI BUILDER (pure DOM, no vdom)
+══════════════════════════════════════════ */
+function el(tag,cls,attrs){
+  const e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(attrs)for(const[k,v]of Object.entries(attrs)){
+    if(k==='style'&&typeof v==='object')Object.assign(e.style,v);
+    else if(k.startsWith('on'))e.addEventListener(k.slice(2).toLowerCase(),v);
+    else e.setAttribute(k,v);
+  }
+  return e;
+}
+
+function mkInput(cls,attrs,onChange){
+  const e=el('input',cls,attrs);
+  if(attrs&&attrs.value!==undefined)e.value=attrs.value;
+  if(onChange)e.addEventListener('input',onChange);
+  return e;
+}
+function mkSelect(cls,opts,selected,onChange){
+  const e=el('select',cls);
+  opts.forEach(([v,l])=>{const o=el('option','',{value:v});o.textContent=l;if(String(v)===String(selected))o.selected=true;e.appendChild(o);});
+  if(onChange)e.addEventListener('change',onChange);
+  return e;
+}
+function mkBtn(cls,label,onClick){const b=el('button',cls,{onclick:onClick});b.innerHTML=label;return b;}
+
+/* ══════════════════════════════════════════
+   MODAL RENDER
+══════════════════════════════════════════ */
+function renderModal(){
+  const root=document.getElementById('modal-root');
+  root.innerHTML='';
+  const c=getChar();
+
+  /* DELETE MODAL */
+  if(S.showDeleteModal){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Apagar Personagem';
+    const body=el('div','delete-modal-body');
+    const icon=el('div','delete-modal-icon');icon.textContent='☠';
+    const msg=el('div','delete-modal-msg');msg.textContent='Tens a certeza que queres apagar';
+    const name=el('div','delete-modal-name');name.textContent=c.name;
+    const warn=el('div','delete-modal-warn');warn.textContent='Esta ação é irreversível e todos os dados serão perdidos.';
+    body.append(icon,msg,name,warn);
+    const footer=el('div','modal-footer');
+    const btnCancel=mkBtn('btn btn-ghost','Cancelar',closeModal);
+    const btnDel=mkBtn('btn btn-danger','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/></svg>Apagar para Sempre',deleteChar);
+    footer.append(btnCancel,btnDel);
+    const inner=el('div','modal-inner');
+    inner.append(title,body);
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+  if(S.showAddTokenModal){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>Novo Token';
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Adicionar Token',confirmAddToken));
+    const inner=el('div','modal-inner');
+    inner.append(title,buildTokenForm(S.newTok, d=>S.newTok=d));
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+
+  /* EDIT TOKEN MODAL */
+  if(S.showEditTokenModal&&S.editTokData){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar Token';
+    const footer=el('div','modal-footer');
+    const btnRemove=mkBtn('btn btn-danger btn-sm','Remover Token',()=>{removeToken(S.editTokenId);closeModal();});
+    const fRight=el('div','',{style:{display:'flex',gap:'8px'}});
+    fRight.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Guardar',saveEditToken));
+    footer.style.justifyContent='space-between';
+    footer.append(btnRemove,fRight);
+    const inner=el('div','modal-inner');
+    inner.append(title,buildTokenForm(S.editTokData, d=>S.editTokData=d));
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+
+  /* EDIT CHARACTER MODAL (identidade + vida + dinheiro) */
+  if(S.showEditCharModal&&S.editCharData){
+    const d=S.editCharData;
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar Personagem';
+
+    const grid=el('div','form-grid');
+    function mkF(labelTxt,inputEl,full){const w=el('div',full?'span-full':null);const lb=el('div','field-label');lb.textContent=labelTxt;w.append(lb,inputEl);return w;}
+
+    const nameI=mkInput('field-input',{type:'text',value:d.name,placeholder:'Nome do personagem'},e=>{d.name=e.target.value;});
+    const lvlI=mkInput('field-input',{type:'number',min:'1',max:'20',value:d.level},e=>{d.level=e.target.value;});
+    const raceI=mkInput('field-input',{type:'text',value:d.race,placeholder:'Ex: Humano, Elfo…'},e=>{d.race=e.target.value;});
+    const classI=mkInput('field-input',{type:'text',value:d.class_,placeholder:'Ex: Guerreiro, Mago…'},e=>{d.class_=e.target.value;});
+
+    const sepIdent=el('div','span-full',{style:{paddingTop:'4px',marginTop:'4px'}});
+    const sepIdentLbl=el('div','field-label',{style:{color:'var(--gold-dim)'}});sepIdentLbl.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Identidade';
+    sepIdent.appendChild(sepIdentLbl);
+
+    const sepVida=el('div','span-full',{style:{paddingTop:'10px',marginTop:'4px'}});
+    const sepVidaLbl=el('div','field-label',{style:{color:'var(--gold-dim)'}});sepVidaLbl.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Vida';
+    sepVida.appendChild(sepVidaLbl);
+
+    const maxHPI=mkInput('field-input',{type:'number',min:'1',value:d.maxHP},e=>{d.maxHP=e.target.value;});
+    const curHPI=mkInput('field-input',{type:'number',min:'0',value:d.currentHP},e=>{d.currentHP=e.target.value;});
+    const tempHPI=mkInput('field-input',{type:'number',min:'0',value:d.tempHP},e=>{d.tempHP=e.target.value;});
+
+    const sepMoney=el('div','span-full',{style:{paddingTop:'10px',marginTop:'4px'}});
+    const sepMoneyLbl=el('div','field-label',{style:{color:'var(--gold-dim)'}});sepMoneyLbl.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3 1.34-3 3 1.34 3 3 3"/></svg>Dinheiro';
+    sepMoney.appendChild(sepMoneyLbl);
+    const moneyI=mkInput('field-input',{type:'number',min:'0',step:'0.01',value:d.money},e=>{d.money=e.target.value;});
+
+    const sepBio=el('div','span-full',{style:{paddingTop:'10px',marginTop:'4px'}});
+    const sepBioLbl=el('div','field-label',{style:{color:'var(--gold-dim)'}});sepBioLbl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Biografia';
+    sepBio.appendChild(sepBioLbl);
+    const bioTa=el('textarea','field-input');bioTa.rows=4;
+    bioTa.placeholder='História, personalidade, objetivos, ligações…';
+    bioTa.value=d.notes;
+    bioTa.addEventListener('input',e=>{d.notes=e.target.value;});
+
+    grid.append(
+      sepIdent,
+      mkF('Nome',nameI,true),
+      mkF('Raça',raceI),mkF('Classe',classI),
+      mkF('Nível',lvlI),
+      sepVida,
+      mkF('HP Máximo',maxHPI),mkF('HP Atual',curHPI),mkF('HP Temporário',tempHPI),
+      sepMoney,
+      mkF('Quantidade (PO)',moneyI,true),
+      sepBio,
+      mkF('Notas',bioTa,true)
+    );
+
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Guardar',saveEditChar));
+    const inner=el('div','modal-inner');
+    inner.append(title,grid);
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+
+  /* DANO MODAL */
+  if(S.showDamageModal){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/></svg>Registar Dano';
+    const body=el('div');
+    const lbl=el('div','field-label');lbl.textContent='Quantidade de dano sofrido';
+    const inp=mkInput('field-input',{type:'number',min:'0',placeholder:'Ex: 8',value:S.damageAmount},e=>{S.damageAmount=e.target.value;});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')confirmDamage();});
+    body.append(lbl,inp);
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-damage','− Aplicar Dano',confirmDamage));
+    const inner=el('div','modal-inner');
+    inner.append(title,body);
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+    setTimeout(()=>inp.focus(),0);
+  }
+
+  /* CURA MODAL */
+  if(S.showHealModal){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Registar Cura';
+    const body=el('div');
+    const lbl=el('div','field-label');lbl.textContent='Quantidade de HP curado';
+    const inp=mkInput('field-input',{type:'number',min:'0',placeholder:'Ex: 6',value:S.healAmount},e=>{S.healAmount=e.target.value;});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')confirmHeal();});
+    body.append(lbl,inp);
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-heal','+ Aplicar Cura',confirmHeal));
+    const inner=el('div','modal-inner');
+    inner.append(title,body);
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+    setTimeout(()=>inp.focus(),0);
+  }
+
+  /* DINHEIRO MODAL */
+  if(S.showMoneyModal){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3 1.34-3 3 1.34 3 3 3"/></svg>Registar Dinheiro';
+    const body=el('div','form-grid');
+    const amtWrap=el('div','span-full');
+    const lbl=el('div','field-label');lbl.textContent='Quantidade (PO)';
+    const inp=mkInput('field-input',{type:'number',min:'0',step:'0.01',placeholder:'Ex: 15',value:S.moneyAmount},e=>{S.moneyAmount=e.target.value;});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')confirmMoney();});
+    amtWrap.append(lbl,inp);
+    const typeWrap=el('div','span-full');
+    const typeLbl=el('div','field-label');typeLbl.textContent='Tipo';
+    const typeSel=mkSelect('field-input',[['add','💰 Recebido (adicionar)'],['remove','💸 Pago (retirar)']],S.moneyType,e=>{S.moneyType=e.target.value;});
+    typeWrap.append(typeLbl,typeSel);
+    body.append(amtWrap,typeWrap);
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Confirmar',confirmMoney));
+    const inner=el('div','modal-inner');
+    inner.append(title,body);
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+    setTimeout(()=>inp.focus(),0);
+  }
+
+  /* ADD ITEM MODAL */
+  if(S.showAddInvModal&&S.newInvItem){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Novo Item';
+    const footer=el('div','modal-footer');
+    footer.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Adicionar Item',confirmAddInv));
+    const inner=el('div','modal-inner');
+    inner.append(title,buildInvForm(S.newInvItem,d=>S.newInvItem=d));
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+
+  /* EDIT ITEM MODAL */
+  if(S.showEditInvModal&&S.editInvData){
+    const ov=el('div','modal-overlay');
+    const m=el('div','modal');
+    const closeBtn=el('button','modal-close',{onclick:closeModal});closeBtn.textContent='✕';
+    const title=el('div','modal-title');title.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar Item';
+    const footer=el('div','modal-footer');
+    const btnRemove=mkBtn('btn btn-danger btn-sm','Remover Item',()=>{removeInventoryItem(S.editInvId);closeModal();});
+    const fRight=el('div','',{style:{display:'flex',gap:'8px'}});
+    fRight.append(mkBtn('btn btn-ghost','Cancelar',closeModal),mkBtn('btn btn-gold','Guardar',saveEditInv));
+    footer.style.justifyContent='space-between';
+    footer.append(btnRemove,fRight);
+    const inner=el('div','modal-inner');
+    inner.append(title,buildInvForm(S.editInvData,d=>S.editInvData=d));
+    m.append(closeBtn,inner,footer);
+    ov.appendChild(m);root.appendChild(ov);
+  }
+}
+
+function buildTokenForm(data, setData){
+  const grid=el('div','form-grid');
+
+  // Name
+  const nameWrap=el('div');
+  const nameLabel=el('div','field-label');nameLabel.textContent='Nome';
+  const nameInp=mkInput('field-input',{type:'text',value:data.name,placeholder:'Ex: Espaços de Magia'},e=>{setData({...data,name:e.target.value});data.name=e.target.value;});
+  nameWrap.append(nameLabel,nameInp);
+
+  // Max
+  const maxWrap=el('div');
+  const maxLabel=el('div','field-label');maxLabel.textContent='Usos Máximos';
+  const maxInp=mkInput('field-input',{type:'number',min:'1',max:'30',value:data.max},e=>{const v=Math.max(1,parseInt(e.target.value)||1);data.max=v;setData({...data,max:v});});
+  maxWrap.append(maxLabel,maxInp);
+
+  // Desc
+  const descWrap=el('div','span-full');
+  const descLabel=el('div','field-label');descLabel.textContent='Descrição (opcional)';
+  const descInp=mkInput('field-input',{type:'text',value:data.description,placeholder:'Ex: Nível 3'},e=>{data.description=e.target.value;setData({...data,description:e.target.value});});
+  descWrap.append(descLabel,descInp);
+
+  // Short restore
+  const srWrap=el('div');
+  const srLabel=el('div','field-label');srLabel.textContent='Restaurar — Descanso Curto';
+  const srOpts=[['0','Nenhum'],['full','Todos'],...[1,2,3,4,5,6,7,8].map(n=>[String(n),String(n)])];
+  const srSel=mkSelect('field-input',srOpts,data.shortRestore,e=>{data.shortRestore=e.target.value;setData({...data,shortRestore:e.target.value});});
+  srWrap.append(srLabel,srSel);
+
+  // Long restore
+  const lrWrap=el('div');
+  const lrLabel=el('div','field-label');lrLabel.textContent='Restaurar — Descanso Longo';
+  const lrOpts=[['full','Todos'],['0','Nenhum'],...[1,2,3,4,5,6,7,8].map(n=>[String(n),String(n)])];
+  const lrSel=mkSelect('field-input',lrOpts,data.longRestore,e=>{data.longRestore=e.target.value;setData({...data,longRestore:e.target.value});});
+  lrWrap.append(lrLabel,lrSel);
+
+  // Color
+  const colorWrap=el('div','span-full');
+  const colorLabel=el('div','field-label',{style:{marginBottom:'8px'}});colorLabel.textContent='Cor';
+  const colorOpts=el('div','color-options');
+  TOKEN_COLORS.forEach(c=>{
+    const dot=el('div',`color-opt${data.color===c?' selected':''}`);
+    dot.style.background=c;
+    dot.addEventListener('click',()=>{data.color=c;setData({...data,color:c});renderModal();});
+    colorOpts.appendChild(dot);
+  });
+  colorWrap.append(colorLabel,colorOpts);
+
+  grid.append(nameWrap,maxWrap,descWrap,srWrap,lrWrap,colorWrap);
+  return grid;
+}
+
+/* ── INVENTORY ── */
+const INV_CATEGORIES=['Arma','Armadura','Ferramenta','Consumível','Poção','Equipamento','História'];
+
+function newInvItem(){return{id:uid(),name:'',category:'Equipamento',qty:1,description:''};}
+
+function openAddInvModal(){S.newInvItem=newInvItem();S.showAddInvModal=true;renderModal();}
+function openEditInvModal(id){
+  const c=getChar();const item=c.inventory.find(i=>i.id===id);
+  if(!item)return;
+  S.editInvId=id;S.editInvData={...item};
+  S.showEditInvModal=true;renderModal();
+}
+function confirmAddInv(){
+  const d=S.newInvItem;
+  if(!d.name.trim()){showToast('Dá um nome ao item!');return;}
+  const item={...d,id:uid(),name:d.name.trim(),qty:Math.max(1,parseInt(d.qty)||1)};
+  const c=getChar();
+  updateChar({inventory:[...c.inventory,item]});
+  closeModal();showToast(`${item.name} adicionado ao inventário!`);
+}
+function saveEditInv(){
+  const d=S.editInvData;
+  if(!d.name.trim()){showToast('O item precisa de um nome!');return;}
+  d.qty=Math.max(1,parseInt(d.qty)||1);
+  const c=getChar();
+  updateChar({inventory:c.inventory.map(i=>i.id===S.editInvId?{...d}:i)});
+  closeModal();showToast(`${d.name} atualizado!`);
+}
+function removeInventoryItem(id){
+  const c=getChar();
+  updateChar({inventory:c.inventory.filter(i=>i.id!==id)});
+}
+function changeInventoryQty(id,delta){
+  const c=getChar();
+  updateChar({inventory:c.inventory.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i)});
+}
+
+function getItemIcon(cat,name,emoji){
+  if(emoji)return emoji;
+  const n=(name||'').toLowerCase();
+  if(cat==='Arma'||n.includes('espada')||n.includes('arco')||n.includes('adaga'))return'⚔️';
+  if(cat==='Armadura'||n.includes('escudo')||n.includes('armadura'))return'🛡️';
+  if(cat==='Poção'||n.includes('poção'))return'🧪';
+  if(cat==='Pergaminho'||n.includes('pergaminho'))return'📜';
+  if(cat==='Ferramenta'||n.includes('ferramenta'))return'🔧';
+  if(cat==='Tesouro'||n.includes('gema')||n.includes('ouro'))return'💎';
+  if(cat==='Consumível')return'🕯️';
+  if(cat==='Equipamento')return'🎒';
+  return'📦';
+}
+
+function buildInvForm(data,setData){
+  const grid=el('div','form-grid');
+
+  const nameWrap=el('div');
+  const nameLabel=el('div','field-label');nameLabel.textContent='Nome';
+  const nameInp=mkInput('field-input',{type:'text',value:data.name,placeholder:'Ex: Espada Longa'},e=>{data.name=e.target.value;setData({...data,name:e.target.value});});
+  nameWrap.append(nameLabel,nameInp);
+
+  const catWrap=el('div');
+  const catLabel=el('div','field-label');catLabel.textContent='Categoria';
+  const catSel=mkSelect('field-input',INV_CATEGORIES.map(c=>[c,c]),data.category,e=>{data.category=e.target.value;setData({...data,category:e.target.value});});
+  catWrap.append(catLabel,catSel);
+
+  const qtyWrap=el('div');
+  const qtyLabel=el('div','field-label');qtyLabel.textContent='Quantidade';
+  const qtyInp=mkInput('field-input',{type:'number',min:'1',value:data.qty},e=>{data.qty=Math.max(1,parseInt(e.target.value)||1);setData({...data,qty:data.qty});});
+  qtyWrap.append(qtyLabel,qtyInp);
+
+  // Emoji input
+  const emojiWrap=el('div');
+  const emojiLabel=el('div','field-label');emojiLabel.textContent='Ícone (emoji)';
+  const emojiInp=mkInput('field-input',{type:'text',value:data.emoji||'',placeholder:'Ex: ⚔️'},e=>{data.emoji=e.target.value.trim();setData({...data,emoji:data.emoji});});
+  emojiInp.style.fontSize='22px';emojiInp.style.textAlign='center';
+  emojiWrap.append(emojiLabel,emojiInp);
+
+  const descWrap=el('div','span-full');
+  const descLabel=el('div','field-label');descLabel.textContent='Descrição (opcional)';
+  const descInp=el('textarea','field-input');descInp.placeholder='Ex: +1 de bónus de ataque, forjada pelos anões…';descInp.value=data.description||'';descInp.style.minHeight='70px';
+  descInp.addEventListener('input',e=>{data.description=e.target.value;setData({...data,description:e.target.value});});
+  descWrap.append(descLabel,descInp);
+
+  grid.append(nameWrap,catWrap,qtyWrap,emojiWrap,descWrap);
+  return grid;
+}
+
+/* ══════════════════════════════════════════
+   MAIN RENDER
+══════════════════════════════════════════ */
+function render(){
+  const root=document.getElementById('app');
+  root.innerHTML='';
+  const c=getChar();
+
+  /* TOP BAR */
+  const topBar=el('div','top-bar');
+
+  if(!c){
+    root.appendChild(topBar);
+
+    const emptyPanel=el('div','panel',{style:{textAlign:'center',padding:'48px 20px'}});
+    const emptyIcon=el('div',null,{style:{fontSize:'48px',marginBottom:'12px'}});emptyIcon.innerHTML='<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>';
+    const emptyTitle=el('div',null,{style:{fontFamily:"'Baloo 2',serif",fontSize:'18px',color:'var(--gold-light)',letterSpacing:'1px',marginBottom:'8px'}});emptyTitle.textContent='Nenhum Personagem Criado';
+    const emptyDesc=el('div',null,{style:{fontSize:'14px',color:'var(--text-dim)',marginBottom:'22px'}});emptyDesc.textContent='Cria o teu primeiro aventureiro para começar a tua jornada.';
+    const emptyBtn=mkBtn('btn btn-gold','+ Adicionar Personagem',addChar);
+    emptyPanel.append(emptyIcon,emptyTitle,emptyDesc,emptyBtn);
+    root.appendChild(emptyPanel);
+
+    renderModal();
+    return;
+  }
+
+  const hpPct=c.maxHP>0?c.currentHP/c.maxHP:0;
+  const hpColor=getHPColor(hpPct);
+
+  // Char switcher (top-right)
+  const swWrap=el('div','char-switcher-wrap');
+  const swBtn=el('button',`char-switcher-btn${S.charDropOpen?' open':''}`,{onclick:(e)=>{e.stopPropagation();S.charDropOpen=!S.charDropOpen;render();}});
+  const swName=el('span','char-name-display');swName.textContent=c.name;
+  const swHP=el('span','hp-mini');swHP.textContent=`${c.currentHP}/${c.maxHP} HP`;
+  const swArrow=el('span','arrow');swArrow.textContent='▾';
+  swBtn.append(swName,swHP,swArrow);
+  swWrap.appendChild(swBtn);
+
+  if(S.charDropOpen){
+    const drop=el('div','char-dropdown');
+    S.chars.forEach(ch=>{
+      const item=el('div',`char-dropdown-item${ch.id===c.id?' active':''}`,{onclick:()=>switchChar(ch.id)});
+      const nameSpan=el('span');nameSpan.textContent=ch.name;
+      if(ch.currentHP===0){const t=el('span','tag tag-dead');t.textContent='KO';nameSpan.appendChild(t);}
+      else if(ch.currentHP===ch.maxHP){const t=el('span','tag tag-full');t.textContent='Pleno';nameSpan.appendChild(t);}
+      const hpSpan=el('span','char-drop-hp');hpSpan.textContent=`${ch.currentHP}/${ch.maxHP} HP`;
+      item.append(nameSpan,hpSpan);
+      drop.appendChild(item);
+    });
+    const addRow=el('div','char-dropdown-add',{onclick:addChar});addRow.textContent='+ Novo Personagem';
+    drop.appendChild(addRow);
+    swWrap.appendChild(drop);
+  }
+
+  topBar.append(swWrap);
+  root.appendChild(topBar);
+
+  /* ── SECTION: FICHA (Identidade + Vida + Dinheiro) ── */
+  const secInfoDiv=el('div','',{id:'sec-info'});
+  const divInfo=el('div','section-divider');
+  divInfo.innerHTML='<span class="divider-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="section-divider-label">Personagem</span><span class="divider-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>';
+
+  const panelSheet=el('div','panel');
+  const ptSheet=el('div','panel-title',{style:{justifyContent:'space-between'}});
+  const ptSheetLbl=el('span');ptSheetLbl.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Ficha';
+  ptSheet.append(ptSheetLbl,mkBtn('btn btn-edit btn-sm','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar',openEditCharModal));
+
+  const sheetBody=el('div','sheet-header-body');
+
+  // ── Identity ──
+  const sheetIdent=el('div','sheet-identity');
+  const identName=el('div','identity-name');identName.textContent=c.name||'Aventureiro';
+  const identMeta=el('div','identity-meta');
+  const metaParts=[c.race,c.class_,c.level?`Nível ${c.level}`:null].filter(p=>p&&String(p).trim());
+  identMeta.textContent=metaParts.length?metaParts.join(' · '):'Raça, classe e nível ainda não definidos';
+  sheetIdent.append(identName,identMeta);
+
+  // ── Biografia (junto à identidade, após o nível) ──
+  const bioWrap=el('div','identity-bio');
+  const bioHeader=el('div','identity-bio-header');
+  const bioLbl=el('span','identity-bio-label');bioLbl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Biografia';
+  bioHeader.append(bioLbl);
+  const hasBio=c.notes&&c.notes.trim();
+  const bioDisplay=el('div',`bio-display${hasBio?'':' bio-empty'}`);
+  bioDisplay.textContent=hasBio?c.notes:'Sem biografia definida. Usa o botão "Editar" da ficha para escrever a história, personalidade, objetivos e ligações do teu personagem.';
+  bioWrap.append(bioHeader,bioDisplay);
+  sheetIdent.appendChild(bioWrap);
+
+  // ── Vida ──
+  const sheetVida=el('div','sheet-vida');
+  const orbWrap=el('div','hp-orb-wrap');
+  const orbSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  orbSvg.setAttribute('viewBox','0 0 120 120');orbSvg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+  const orbR=52,orbCx=60,orbCy=60,orbCircum=2*Math.PI*orbR;
+  const trackCirc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  trackCirc.setAttribute('cx',String(orbCx));trackCirc.setAttribute('cy',String(orbCy));trackCirc.setAttribute('r',String(orbR));
+  trackCirc.setAttribute('fill','none');trackCirc.setAttribute('stroke','rgba(139,94,58,0.15)');trackCirc.setAttribute('stroke-width','9');
+  const progCirc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  progCirc.setAttribute('cx',String(orbCx));progCirc.setAttribute('cy',String(orbCy));progCirc.setAttribute('r',String(orbR));
+  progCirc.setAttribute('fill','none');progCirc.setAttribute('stroke',hpColor);progCirc.setAttribute('stroke-width','9');
+  progCirc.setAttribute('stroke-linecap','round');
+  progCirc.setAttribute('stroke-dasharray',String(orbCircum));
+  const dashOffset=orbCircum*(1-hpPct);
+  progCirc.setAttribute('stroke-dashoffset',String(dashOffset));
+  progCirc.setAttribute('transform',`rotate(-90 ${orbCx} ${orbCy})`);
+  progCirc.style.transition='stroke-dashoffset 0.5s ease, stroke 0.4s ease';
+  orbSvg.append(trackCirc,progCirc);
+
+  const orbInner=el('div','hp-orb-inner');
+  const hpCur=el('div','hp-current',{style:{color:c.currentHP===0?'var(--ember)':'var(--text)'}});hpCur.textContent=String(c.currentHP);
+  const hpSl=el('div','hp-slash');hpSl.textContent=`/ ${c.maxHP}`;
+  const hpLabel=el('div','hp-orb-label');hpLabel.textContent='HP';
+  orbInner.append(hpCur,hpSl,hpLabel);
+
+  const orb=el('div','hp-orb');orb.append(orbSvg,orbInner);
+  orbWrap.appendChild(orb);
+
+  const vidaStats=el('div','vida-stats');
+  if(c.tempHP>0){
+    const tempRow=el('div','temp-hp-display');
+    tempRow.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--teal);vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>+${c.tempHP} HP Temporário`;
+    vidaStats.appendChild(tempRow);
+  }
+  const pctLabel=el('div','hp-pct-label');
+  const pct=Math.round(hpPct*100);
+  pctLabel.textContent=`${pct}% de vida`;
+  pctLabel.style.color=hpColor;
+  vidaStats.appendChild(pctLabel);
+  const col3=el('div','sheet-col3');
+  col3.append(orb,vidaStats);
+
+  // ── Dinheiro ──
+  const sheetMoney=el('div','sheet-money');
+  const moneyBox=el('div','sheet-money-box');
+  const moneyLbl=el('div','sheet-money-label');moneyLbl.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3 1.34-3 3 1.34 3 3 3"/></svg>Dinheiro';
+  const moneyAmtRow=el('div');
+  const moneyAmt=el('span','sheet-money-amount');moneyAmt.textContent=String(c.money||0);
+  const moneyUnit=el('span','sheet-money-unit');moneyUnit.textContent='PO';
+  moneyAmtRow.append(moneyAmt,moneyUnit);
+  moneyBox.append(moneyLbl,moneyAmtRow);
+  sheetMoney.appendChild(moneyBox);
+  col3.appendChild(sheetMoney);
+
+  sheetBody.append(sheetIdent,col3);
+  panelSheet.append(ptSheet,sheetBody);
+  secInfoDiv.append(divInfo,panelSheet);
+  root.appendChild(secInfoDiv);
+
+  /* ── SECTION: TOKENS ── */
+  const secTokDiv=el('div','',{id:'sec-tokens'});
+  const divTok=el('div','section-divider');
+  divTok.innerHTML='<span class="divider-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="white"/><circle cx="16" cy="16" r="1.5" fill="white"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg></span><span class="section-divider-label">Tokens e Recursos</span><span class="divider-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="white"/><circle cx="16" cy="16" r="1.5" fill="white"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg></span>';
+  const panelTok=el('div','panel');
+  const tokHdr=el('div','tokens-header');
+  const tokHdrTitle=el('div','panel-title',{style:{margin:'0',border:'none',padding:'0'}});tokHdrTitle.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>Recursos';
+  const tokHdrBtns=el('div','tokens-header-btns');
+  tokHdrBtns.appendChild(mkBtn('btn btn-gold btn-sm','+ Adicionar Token',openAddTokenModal));
+  tokHdr.append(tokHdrTitle,tokHdrBtns);
+
+  const tokList=el('div','token-list');
+  if(c.tokens.length===0){
+    const es=el('div','',{style:{textAlign:'center',padding:'32px 0',color:'var(--text-faint)'}});
+    es.innerHTML='<div style="margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="var(--text-faint)"/><circle cx="16" cy="16" r="1.5" fill="var(--text-faint)"/><circle cx="12" cy="12" r="1.5" fill="var(--text-faint)"/></svg></div><div style="font-family:\'Baloo 2\',serif;font-size:14px;color:var(--text-dim)">Sem tokens ainda</div><div style="font-size:13px;margin-top:4px">Adiciona espaços de magia, ki, inspiração ou qualquer recurso</div>';
+    tokList.appendChild(es);
+  } else {
+    c.tokens.forEach(tok=>{
+      const card=el('div','token-card');
+      const dot=el('div','token-dot');dot.style.background=tok.color;
+      const info=el('div',null,{style:{flex:'1',minWidth:'80px'}});
+      const tn=el('div','token-name');tn.textContent=tok.name;
+      info.appendChild(tn);
+      if(tok.description){const td=el('div','token-desc');td.textContent=tok.description;info.appendChild(td);}
+      const ctrl=el('div','token-controls');
+      const bm=el('button','icon-btn',{onclick:()=>adjustToken(tok.id,-1)});bm.textContent='−';
+      const cnt=el('span','token-count');cnt.textContent=String(tok.current);
+      const mx=el('span','token-max-lbl');mx.textContent=`/ ${tok.max}`;
+      const bp=el('button','icon-btn',{onclick:()=>adjustToken(tok.id,1)});bp.textContent='+';
+      ctrl.append(bm,cnt,mx,bp);
+      const pips=el('div','token-pips');
+      for(let i=0;i<tok.max;i++){
+        const pip=el('div',`token-pip${i>=tok.current?' used':''}`);
+        pip.style.background=i<tok.current?tok.color:'transparent';
+        pip.style.borderColor=tok.color;
+        pip.title=i<tok.current?'Clica para usar':'Clica para restaurar';
+        pip.addEventListener('click',()=>pipClick(tok.id,i));
+        pips.appendChild(pip);
+      }
+      const acts=el('div','token-actions');
+      acts.append(
+        mkBtn('btn btn-edit btn-sm','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar',()=>openEditTokenModal(tok.id))
+      );
+      pips.appendChild(acts);
+      card.append(dot,info,ctrl,pips);
+      tokList.appendChild(card);
+    });
+  }
+  panelTok.append(tokHdr,tokList);
+
+  /* ── INVENTORY PANEL ── */
+  const invPanel=el('div','inventory-panel');
+  const invHdr=el('div','tokens-header');
+  const invTitle=el('div','panel-title',{style:{margin:'0',border:'none',padding:'0'}});
+  invTitle.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Inventário';
+  const invHdrBtns=el('div','tokens-header-btns');
+  invHdrBtns.appendChild(mkBtn('btn btn-gold btn-sm','+ Adicionar Item',openAddInvModal));
+  invHdr.append(invTitle,invHdrBtns);
+
+  const invList=el('div','inventory-list');
+
+  if((c.inventory||[]).length===0){
+    const emp=el('div','inventory-empty');
+    emp.innerHTML='<div style="font-size:28px;margin-bottom:6px">🎒</div><div>Sem itens no inventário</div><div style="font-size:12px;margin-top:4px">Clica em "+ Adicionar Item" para começar</div>';
+    invList.appendChild(emp);
+  } else {
+    (c.inventory).forEach(item=>{
+      const card=el('div','inventory-item',{onclick:()=>openEditInvModal(item.id)});
+      card.title='Clica para editar';
+
+      // qty badge (top-right)
+      if(item.qty>1){
+        const badge=el('div','inventory-item-qty-badge');badge.textContent=`×${item.qty}`;
+        card.appendChild(badge);
+      }
+
+      // name (top)
+      const nm=el('div','inventory-item-name');nm.textContent=item.name;
+      card.appendChild(nm);
+
+      // emoji (centred, grows to fill space)
+      const icon=el('div','inventory-item-icon');icon.textContent=getItemIcon(item.category,item.name,item.emoji);
+      card.appendChild(icon);
+
+      // category
+      const cat=el('div','inventory-item-cat');cat.textContent=item.category||'Equipamento';
+      card.appendChild(cat);
+
+      // description (only if present)
+      if(item.description){
+        const desc=el('div','inventory-item-desc');desc.textContent=item.description;
+        card.appendChild(desc);
+      }
+
+      invList.appendChild(card);
+    });
+  }
+
+  const invCount=el('div','inventory-gold-total');
+  const totalItems=(c.inventory||[]).reduce((s,i)=>s+i.qty,0);
+  invCount.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg> ${totalItems} item${totalItems!==1?'s':''} · ${(c.inventory||[]).length} tipo${(c.inventory||[]).length!==1?'s':''}`;
+
+  invPanel.append(invHdr,invList,invCount);
+
+  const tokInvRow=el('div','tokens-inventory-row');
+  tokInvRow.append(panelTok,invPanel);
+  secTokDiv.append(divTok,tokInvRow);
+  root.appendChild(secTokDiv);
+
+  /* ── SECTION: DESCANSO (collapsible) ── */
+  const secRestDiv=el('div','',{id:'sec-rest'});
+  const restPanel=el('div','rest-panel');
+  const restToggle=el('button',`rest-toggle${S.restOpen?' open':''}`,{onclick:toggleRest});
+  const rtLeft=el('span','rtoggle-left');rtLeft.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span style="letter-spacing:2.5px">Descanso</span>';
+  const rtArrow=el('span','rtoggle-arrow');rtArrow.textContent='▾';
+  restToggle.append(rtLeft,rtArrow);
+
+  const restBody=el('div',`rest-body${S.restOpen?' open':''}`);
+
+  const restCards=el('div','rest-cards');
+
+  // Short rest card
+  const srCard=el('div','rest-card');
+  const srTitle=el('div','rest-card-title');srTitle.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Descanso Curto';
+  const srHpRow=el('div','rest-row');
+  const srHpLbl=el('span');srHpLbl.textContent='HP restaurado:';
+  const srHpI=mkInput('rest-input',{type:'number',min:'0',value:c.restConfig.shortHP},e=>{getChar().restConfig.shortHP=Math.max(0,parseInt(e.target.value)||0);save();});
+  const srHpU=el('span',null,{style:{fontSize:'12px',color:'var(--text-faint)'}});srHpU.textContent='HP';
+  srHpRow.append(srHpLbl,srHpI,srHpU);
+
+  const stSel=el('div','short-token-select');
+  const stTitle=el('div','short-token-select-title');stTitle.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>Restaurar tokens no descanso curto';
+  stSel.appendChild(stTitle);
+  if(c.tokens.length===0){
+    const note=el('div',null,{style:{fontSize:'13px',color:'var(--text-faint)',fontStyle:'italic'}});note.textContent='Adiciona tokens primeiro.';
+    stSel.appendChild(note);
+  } else {
+    c.tokens.forEach(tok=>{
+      const row=el('div','short-tok-row');
+      const tnm=el('div','short-tok-name');
+      const dot=el('div','token-dot');dot.style.background=tok.color;
+      tnm.append(dot,tok.name);
+      const restore_lbl=el('span',null,{style:{fontSize:'13px',color:'var(--text-dim)'}});restore_lbl.textContent='restaurar:';
+      const sOpts=[['0','Nenhum'],['full','Todos'],...[1,2,3,4,5,6,7,8].map(n=>[String(n),String(n)])];
+      const sSel=mkSelect('short-tok-sel',sOpts,tok.shortRestore,e=>updateTokenShortRestore(tok.id,e.target.value));
+      const cur=el('span',null,{style:{fontSize:'12px',color:'var(--text-faint)'}});cur.textContent=`(${tok.current}/${tok.max})`;
+      row.append(tnm,restore_lbl,sSel,cur);
+      stSel.appendChild(row);
+    });
+  }
+  const btnSR=mkBtn('btn btn-short','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Tomar Descanso Curto',doShortRest);
+  btnSR.style.width='100%';btnSR.style.marginTop='14px';
+  srCard.append(srTitle,srHpRow,stSel,btnSR);
+
+  // Long rest card
+  const lrCard=el('div','rest-card');
+  const lrTitle=el('div','rest-card-title');lrTitle.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Descanso Longo';
+  const lrHpRow=el('div','rest-row');
+  const lrHpLbl=el('span');lrHpLbl.textContent='HP restaurado:';
+  const lrHpI=mkInput('rest-input',{type:'number',min:'0',value:c.restConfig.longHP},e=>{getChar().restConfig.longHP=Math.max(0,parseInt(e.target.value)||0);save();});
+  const lrHpU=el('span',null,{style:{fontSize:'12px',color:'var(--text-faint)'}});lrHpU.textContent='(0 = total)';
+  lrHpRow.append(lrHpLbl,lrHpI,lrHpU);
+  const lrTokRow=el('div','rest-row');
+  const lrTokLbl=el('span');lrTokLbl.textContent='Restaurar todos os tokens:';
+  const lrChk=el('input',null,{type:'checkbox'});lrChk.style.accentColor='var(--gold)';lrChk.style.width='16px';lrChk.style.height='16px';lrChk.checked=c.restConfig.longFullTokens;lrChk.addEventListener('change',e=>{getChar().restConfig.longFullTokens=e.target.checked;save();});
+  lrTokRow.append(lrTokLbl,lrChk);
+  const lrNote=el('div',null,{style:{fontSize:'12px',color:'var(--text-faint)',marginBottom:'12px'}});lrNote.textContent='HP temporário é sempre removido no descanso longo.';
+  const btnLR=mkBtn('btn btn-long','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Tomar Descanso Longo',doLongRest);
+  btnLR.style.width='100%';
+  lrCard.append(lrTitle,lrHpRow,lrTokRow,lrNote,btnLR);
+
+  restCards.append(srCard,lrCard);
+  restBody.appendChild(restCards);
+  restPanel.append(restToggle,restBody);
+  secRestDiv.appendChild(restPanel);
+  root.appendChild(secRestDiv);
+
+  /* ── DANGER (collapsible panel) ── */
+  const dangerPanel=el('div','danger-panel');
+  const dangerToggle=el('button',`danger-toggle${S.dangerOpen?' open':''}`,{onclick:toggleDanger});
+  const dtLeft=el('span','dtoggle-left');dtLeft.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span style="letter-spacing:2.5px">Zona de Perigo</span>';
+  const dtArrow=el('span','dtoggle-arrow');dtArrow.textContent='▾';
+  dangerToggle.append(dtLeft,dtArrow);
+  const dangerBody=el('div',`danger-body${S.dangerOpen?' open':''}`);
+  const dangerDesc=el('div',null,{style:{fontSize:'14px',color:'var(--text-dim)',marginBottom:'14px'}});dangerDesc.textContent='Apagar este personagem irá remover todos os dados permanentemente.';
+  const btnDel=mkBtn('btn btn-danger','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/></svg>Apagar Personagem',openDeleteModal);
+  dangerBody.append(dangerDesc,btnDel);
+  dangerPanel.append(dangerToggle,dangerBody);
+  root.appendChild(dangerPanel);
+
+  // Re-render modal (keeps it on top)
+  renderModal();
+}
+
+/* ══════════════════════════════════════════
+   CLOSE DROPDOWN ON OUTSIDE CLICK
+══════════════════════════════════════════ */
+document.addEventListener('click',e=>{
+  if(S.charDropOpen&&!e.target.closest('.char-switcher-wrap')){
+    S.charDropOpen=false;render();
+  }
+});
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+load();render();
+
+/* ══════════════════════════════════════════
+   EXPORT AS JPG — with filename popup
+══════════════════════════════════════════ */
+function isMobileOrTablet(){
+  return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||
+    (navigator.maxTouchPoints>1&&/Mac/.test(navigator.userAgent));
+}
+
+function exportAsImage(){
+  // Build today's example placeholder
+  const now=new Date();
+  const dd=String(now.getDate()).padStart(2,'0');
+  const mm=String(now.getMonth()+1).padStart(2,'0');
+  const yy=String(now.getFullYear()).slice(2);
+  const exampleName=`${dd}.${mm}.${yy}`;
+
+  // Create export popup overlay
+  const ov=document.createElement('div');
+  ov.id='export-overlay';
+  ov.style.cssText=`
+    position:fixed;inset:0;background:rgba(80,53,26,0.6);
+    z-index:1100;display:flex;align-items:center;justify-content:center;
+    padding:20px;backdrop-filter:blur(3px);animation:fadeIn 0.15s ease;
+  `;
+
+  const box=document.createElement('div');
+  box.style.cssText=`
+    background:var(--surface);border:3px solid var(--border-strong);
+    border-radius:20px;padding:0;max-width:400px;width:100%;
+    box-shadow:0 8px 0 rgba(101,67,33,0.18),0 16px 40px rgba(101,67,33,0.35);
+    animation:slideUp 0.18s ease;position:relative;overflow:hidden;
+  `;
+
+  // Rainbow top bar
+  const topBar=document.createElement('div');
+  topBar.style.cssText='height:10px;background:linear-gradient(to right,var(--gold),var(--teal-bright),var(--ember),var(--gold));border-radius:17px 17px 0 0;';
+
+  const inner=document.createElement('div');
+  inner.style.cssText='padding:28px 28px 0;';
+
+  const title=document.createElement('div');
+  title.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:800;color:var(--text);
+    letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;
+    border-bottom:3px solid var(--border-mid);display:flex;align-items:center;gap:10px;`;
+  title.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar Ficha`;
+
+  const lbl=document.createElement('div');
+  lbl.style.cssText=`font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:700;
+    color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;`;
+  lbl.textContent='Data da sessão';
+
+  const inp=document.createElement('input');
+  inp.type='date';
+  inp.value=`${now.getFullYear()}-${mm}-${dd}`;
+  inp.style.cssText=`width:100%;background:var(--surface2);border:2px solid var(--border-mid);
+    color:var(--text);font-family:'Quicksand',sans-serif;font-weight:600;font-size:16px;
+    padding:10px 13px;border-radius:10px;outline:none;box-sizing:border-box;
+    transition:border-color 0.15s,box-shadow 0.15s;cursor:pointer;`;
+  inp.addEventListener('focus',()=>{inp.style.borderColor='var(--gold-dim)';inp.style.boxShadow='0 0 0 3px rgba(243,189,86,0.25)';});
+  inp.addEventListener('blur',()=>{inp.style.borderColor='var(--border-mid)';inp.style.boxShadow='';});
+
+  const hint=document.createElement('div');
+  hint.style.cssText='font-size:12px;color:var(--text-faint);font-weight:600;margin-top:7px;margin-bottom:4px;';
+  hint.textContent=isMobileOrTablet()?'A imagem será guardada na tua galeria.':'A imagem será guardada como JPG no teu dispositivo.';
+
+  inner.append(title,lbl,inp,hint);
+
+  const footer=document.createElement('div');
+  footer.style.cssText='display:flex;gap:10px;justify-content:flex-end;padding:16px 28px 22px;';
+
+  const btnCancel=document.createElement('button');
+  btnCancel.className='btn btn-ghost';btnCancel.textContent='Cancelar';
+  btnCancel.onclick=()=>ov.remove();
+
+  const btnOk=document.createElement('button');
+  btnOk.className='btn btn-gold';
+  btnOk.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar';
+  btnOk.onclick=()=>{
+    const val=inp.value; // "YYYY-MM-DD"
+    let fullName;
+    if(val){
+      const [y,m,d]=val.split('-');
+      fullName=`Sessão ${d}.${m}.${y.slice(2)}`;
+    } else {
+      fullName=`Sessão ${dd}.${mm}.${yy}`;
+    }
+    ov.remove();
+    doExport(fullName);
+  };
+
+  footer.append(btnCancel,btnOk);
+  box.append(topBar,inner,footer);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  // Close on backdrop click
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+
+  // Allow Enter to confirm
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter')btnOk.click();
+    if(e.key==='Escape')ov.remove();
+  });
+}
+
+async function doExport(customName){
+  const btn=document.getElementById('btn-export');
+  if(btn){btn.disabled=true;btn.style.opacity='0.5';}
+  showToast('A gerar imagem… ⏳');
+
+  if(!window.html2canvas){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload=resolve;s.onerror=reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const fileName=customName||'ficha';
+
+  // Build a temporary container with only the sections we want
+  const secInfo=document.getElementById('sec-info');
+  const secTok=document.getElementById('sec-tokens');
+  if(!secInfo||!secTok){
+    showToast('Secções não encontradas.');
+    if(btn){btn.disabled=false;btn.style.opacity='';}
+    return;
+  }
+
+  const wrap=document.createElement('div');
+  wrap.style.cssText=`
+    position:fixed;top:-9999px;left:0;
+    width:${secInfo.offsetWidth}px;
+    padding:24px;box-sizing:border-box;
+    background-color:#b9854c;
+    background-image:
+      radial-gradient(ellipse at 50% -10%,rgba(255,234,196,0.35) 0%,transparent 55%),
+      linear-gradient(165deg,#cf9d68 0%,#bb8650 45%,#a87642 100%);
+    font-family:'Quicksand',sans-serif;
+  `;
+
+  wrap.appendChild(secInfo.cloneNode(true));
+  wrap.appendChild(secTok.cloneNode(true));
+  document.body.appendChild(wrap);
+
+  try{
+    const canvas=await html2canvas(wrap,{
+      backgroundColor:'#b9854c',
+      scale:2,
+      useCORS:true,
+      allowTaint:true,
+      scrollX:0,
+      scrollY:0,
+      width:wrap.offsetWidth,
+      height:wrap.scrollHeight,
+    });
+
+    document.body.removeChild(wrap);
+
+    const jpegDataUrl=canvas.toDataURL('image/jpeg',0.92);
+
+    if(isMobileOrTablet()&&navigator.share){
+      const res=await fetch(jpegDataUrl);
+      const blob=await res.blob();
+      const file=new File([blob],`${fileName}.jpg`,{type:'image/jpeg'});
+      await navigator.share({files:[file],title:fileName});
+      showToast('Imagem partilhada / guardada! 📸');
+    } else {
+      const link=document.createElement('a');
+      link.download=`${fileName}.jpg`;
+      link.href=jpegDataUrl;
+      link.click();
+      showToast('Ficha exportada com sucesso! 📸');
+    }
+  } catch(err){
+    if(document.body.contains(wrap))document.body.removeChild(wrap);
+    if(err&&err.name==='AbortError'){
+      showToast('Exportação cancelada.');
+    } else {
+      showToast('Erro ao exportar. Tenta novamente.');
+      console.error(err);
+    }
+  } finally{
+    if(btn){btn.disabled=false;btn.style.opacity='';}
+  }
+}
+</script>
+</body>
+</html>

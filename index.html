@@ -1107,7 +1107,7 @@ body{overflow-x:hidden;}
 .tokens-inventory-row .panel{margin-bottom:0;}
 .inventory-panel{background:var(--surface);border:2px solid var(--border-mid);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;box-shadow:var(--sh-md);}
 .inventory-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(to right,#f6c969,#f3976a,#ec8a8e,#d488d8,#8ab0ec,#7ecbae,#d6dd7e);opacity:1;border-radius:var(--radius) var(--radius) 0 0;}
-.inventory-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px;}
+.inventory-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
 .inventory-item{display:flex;flex-direction:column;align-items:center;text-align:center;aspect-ratio:4/5;background:linear-gradient(160deg,var(--surface) 0%,var(--surface2) 100%);border:2px solid var(--border-mid);border-radius:14px;padding:12px 10px 10px;transition:border-color 0.15s,box-shadow 0.15s,transform 0.12s;box-shadow:var(--sh-sm);cursor:pointer;position:relative;overflow:hidden;}
 
 .inventory-item:hover{border-color:var(--border-strong);box-shadow:var(--sh-md);transform:translateY(-1px);}
@@ -1255,20 +1255,285 @@ body{overflow-x:hidden;}
 .inventory-item:hover .inv-drag-handle{opacity:0.7;}
 
 /* ══════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — TABLET & MOBILE
+   Regras gerais:
+   • Sem :hover em touch — usar :active e estados permanentes
+   • Alvos de toque mínimo 44px
+   • Elementos ocultos por hover ficam sempre visíveis
+   • Modais com padding seguro do teclado virtual
 ══════════════════════════════════════════ */
-@media(max-width:700px){
-  :root{--sidebar-w:52px;}
-  .main-content{padding:12px 10px 60px 12px;}
-  .form-grid{grid-template-columns:1fr;}
-  .rest-cards{flex-direction:column;}
-  .hud-card{flex-direction:column;align-items:center;text-align:center;}
-  .hud-main{align-items:center;width:100%;}
-  .hud-name-line{justify-content:center;}
-  .hud-side{align-items:center;width:100%;}
-  .hud-money-pill{justify-content:center;}
+
+/* ── TABLET (768px – 1099px) ── */
+@media(min-width:768px) and (max-width:1099px){
+  /* Conteúdo principal sem a margem do arsenal fixo */
+  .main-content{padding:28px 20px 40px 88px;}
+  /* Formulários em coluna única no tablet estreito */
+  .form-grid{grid-template-columns:1fr 1fr;}
+  /* tokens + inventário empilhados */
   .tokens-inventory-row{grid-template-columns:1fr;}
   .inventory-panel{width:100%;}
+  /* inventário 3 colunas mantidas */
+  .inventory-list{grid-template-columns:repeat(3,1fr);}
+
+  /* Botões de equip visíveis sempre (sem hover) */
+  .equip-action-bar{display:flex;}
+  .inventory-item:hover .equip-action-bar{display:flex;}
+
+  /* Unequip btn sempre visível */
+  .ws-unequip-btn{opacity:1;}
+  .weapon-slot:hover .ws-unequip-btn,
+  .armor-card:hover .ws-unequip-btn{opacity:1;}
+
+  /* Token actions sempre visíveis */
+  .token-actions{opacity:1;}
+  .token-card:hover .token-actions{opacity:1;}
+
+  /* Token adj btns sempre visíveis */
+  .token-adj-btn{opacity:1;}
+  .token-card:hover .token-adj-btn{opacity:1;}
+
+  /* Btn edit no hud sempre visível */
+  .hud-card .btn-edit{opacity:1;}
+
+  /* Spell controls sempre visíveis */
+  .spell-del-btn{opacity:1;}
+  .spell-use-btn{opacity:1;}
+  .spell-drag-handle{opacity:0.5;}
+
+  /* Inv drag handle sempre visível */
+  .inv-drag-handle{opacity:0.5;}
+
+  /* Arsenal como painel deslizante (não sidebar fixa) */
+  .combat-panel{width:300px;right:-320px;}
+  .combat-panel.mobile-open{right:0;}
+
+  /* Remover hover transitions que causam flicker em touch */
+  .btn:hover{filter:none;transform:none;box-shadow:0 4px 0 rgba(90,55,20,0.25);}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(90,55,20,0.25);}
+  .icon-btn:hover{border-color:var(--border-mid);color:var(--text-dim);background:var(--surface);transform:none;}
+  .icon-btn:active{transform:translateY(1px);}
+  .sidebar-btn:hover{transform:none;background:linear-gradient(180deg,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0.05) 100%);border-color:rgba(0,0,0,0.28);}
+  .sidebar-btn:active{transform:translateY(2px);}
+
+  /* Remover hover nos inventory items */
+  .inventory-item:hover{border-color:var(--border-mid);box-shadow:var(--sh-sm);transform:none;}
+  .inventory-item:active{border-color:var(--border-strong);box-shadow:var(--sh-md);transform:translateY(-1px);}
+
+  /* Remover hover nos token cards */
+  .token-card:hover{border-color:var(--border-mid);box-shadow:var(--sh-sm);}
+  .token-card:active{border-color:var(--border-strong);box-shadow:var(--sh-md);}
+
+  /* Remover hover em weapon/armor slots */
+  .weapon-slot:hover{border-color:#5c361a;}
+  .armor-card:hover{border-color:#5c361a;}
+  .spell-card:hover{border-color:#5c361a;box-shadow:none;}
+
+  /* Char dropdown items */
+  .char-dropdown-item:hover{background:transparent;color:var(--text-dim);}
+  .char-dropdown-item:active{background:var(--gold-pale);color:var(--text);}
+
+  /* Toast repositionado para não sobrepor dock */
+  .toast{bottom:20px;right:16px;left:16px;max-width:none;text-align:center;}
+}
+
+/* ── MOBILE (até 767px) ── */
+@media(max-width:767px){
+  :root{--sidebar-w:52px;}
+
+  /* Conteúdo com padding inferior para o dock de navegação */
+  .main-content{padding:16px 12px 130px 12px;}
+
+  /* Book frame sem bordas excessivas */
+  .book-frame{padding:14px 10px 20px;border-radius:16px;}
+  .book-pages{border-radius:10px;padding:6px;}
+
+  /* ── HUD (cabeçalho do personagem) ── */
+  .hud-card{flex-direction:column;align-items:center;text-align:center;gap:14px;}
+  .hud-portrait-wrap{margin-bottom:14px;}
+  .hud-portrait{width:76px;height:76px;}
+  .hud-main{align-items:center;width:100%;min-width:0;}
+  .hud-name-line{justify-content:center;}
+  .hud-name{font-size:20px;}
+  .hud-side{align-items:center;width:100%;}
+  .hud-money-pill{justify-content:center;}
+  .hud-bar-track{min-width:100%;}
+
+  /* Btn editar sempre visível (sem hover) */
+  .hud-card .btn-edit{opacity:1;}
+
+  /* ── PAINÉIS ── */
+  .panel{padding:18px 14px 16px;}
+  .section-divider{margin:20px 0 12px;}
+  .section-divider-label{font-size:18px;padding:5px 16px 4px;}
+
+  /* ── FORMULÁRIOS ── */
+  .form-grid{grid-template-columns:1fr;}
+
+  /* ── DESCANSO ── */
+  .rest-cards{flex-direction:column;}
+  .rest-card{min-width:0;width:100%;}
+
+  /* ── TOKENS + INVENTÁRIO ── */
+  .tokens-inventory-row{grid-template-columns:1fr;gap:14px;}
+  .tokens-inventory-row .panel{margin-bottom:0;}
+  .inventory-panel{width:100%;}
+
+  /* ── INVENTÁRIO 3 colunas mantidas ── */
+  .inventory-list{grid-template-columns:repeat(3,1fr);gap:8px;}
+  /* Itens de inventário ligeiramente maiores para toque */
+  .inventory-item{padding:10px 6px 8px;border-radius:12px;}
+  .inventory-item-icon{font-size:28px;}
+  .inventory-item-name{font-size:11px;}
+  .inventory-item-cat{font-size:9px;}
+
+  /* Barra de equip sempre visível (sem hover) */
+  .equip-action-bar{display:flex;}
+  .inventory-item:hover .equip-action-bar{display:flex;}
+
+  /* Remover hover nos inventory items — usar :active */
+  .inventory-item:hover{border-color:var(--border-mid);box-shadow:var(--sh-sm);transform:none;}
+  .inventory-item:active{border-color:var(--border-strong);box-shadow:var(--sh-md);}
+
+  /* ── TOKENS ── */
+  /* Actions e adj buttons sempre visíveis */
+  .token-actions{opacity:1;}
+  .token-card:hover .token-actions{opacity:1;}
+  .token-adj-btn{opacity:1;}
+  .token-card:hover .token-adj-btn{opacity:1;}
+  /* Remover hover nos token cards */
+  .token-card:hover{border-color:var(--border-mid);box-shadow:var(--sh-sm);}
+  .token-card:active{border-color:var(--border-strong);box-shadow:var(--sh-md);}
+  /* Pips de token maiores para toque */
+  .token-pip{width:22px;height:22px;}
+
+  /* ── FEITIÇOS (Arsenal) ── */
+  /* Botões sempre visíveis */
+  .spell-del-btn{opacity:1;}
+  .spell-use-btn{opacity:1;}
+  .spell-drag-handle{opacity:0.4;}
+  .spell-card:hover .spell-del-btn{opacity:1;}
+  .spell-card:hover .spell-use-btn{opacity:1;}
+  /* Remover hover nos spell cards */
+  .spell-card:hover{border-color:#5c361a;box-shadow:none;}
+  .spell-card:active{border-color:var(--border-strong);box-shadow:var(--sh-sm);}
+
+  /* ── WEAPON/ARMOR SLOTS ── */
+  .ws-unequip-btn{opacity:1;}
+  .weapon-slot:hover .ws-unequip-btn,
+  .armor-card:hover .ws-unequip-btn{opacity:1;}
+  .weapon-slot:hover{border-color:#5c361a;}
+  .armor-card:hover{border-color:#5c361a;}
+
+  /* ── BOTÕES ── */
+  /* Alvos mínimos de toque 44px */
+  .btn{min-height:44px;padding:10px 18px;}
+  .btn-sm{min-height:36px;padding:8px 12px;}
+  /* Sem hover — apenas :active */
+  .btn:hover{filter:none;transform:none;box-shadow:0 4px 0 rgba(90,55,20,0.25);}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(90,55,20,0.25);}
+  /* Cores :active para feedback de toque */
+  .btn-damage:active{background:#c94a3e;}
+  .btn-heal:active{background:#148f7e;}
+  .btn-gold:active{background:#e0b030;}
+  .btn-ghost:active{background:var(--surface2);}
+
+  .icon-btn{width:40px;height:40px;}
+  .icon-btn:hover{border-color:var(--border-mid);color:var(--text-dim);background:var(--surface);transform:none;}
+  .icon-btn:active{transform:translateY(1px);border-color:var(--gold-dim);background:var(--gold-pale);}
+
+  /* ── SIDEBAR (dock inferior) ── */
+  .sidebar-btn:hover{transform:none;background:var(--surface2);border-color:var(--gold-dim);}
+  .sidebar-btn:active{transform:translateY(-1px) scale(1.04);box-shadow:0 2px 0 rgba(79,47,22,0.4);}
+  /* Tooltip desativado (sem hover) */
+  .sidebar-tip{display:none;}
+
+  /* ── CHAR DROPDOWN ── */
+  .char-dropdown-item:hover{background:transparent;color:var(--text-dim);}
+  .char-dropdown-item:active{background:var(--gold-pale);color:var(--text);}
+  /* Itens maiores para toque */
+  .char-dropdown-item{padding:14px 16px;min-height:48px;}
+  .char-dropdown-add{padding:14px 16px;min-height:48px;}
+
+  /* ── MODAIS ── */
+  .modal{max-width:100%;border-radius:16px 16px 0 0;}
+  .modal-inner{padding:24px 18px 0;}
+  .modal-footer{padding:14px 18px 20px;}
+  /* Overlay alinha modal na base (sheet modal) */
+  .modal-overlay{align-items:flex-end;padding:0;}
+  /* Inputs maiores para toque */
+  .field-input{font-size:16px;padding:12px 14px;min-height:48px;}
+  select.field-input{min-height:48px;}
+  .small-input{min-height:44px;width:64px;}
+
+  /* ── DEATH SAVES ── */
+  .ds-slot{width:44px;height:44px;}
+
+  /* ── TOAST ── */
+  .toast{bottom:110px;right:12px;left:12px;max-width:none;text-align:center;font-size:13px;}
+
+  /* ── PANEL TITLE ── */
+  .panel-title{font-size:11px;}
+
+  /* ── PORTRAIT PICKER ── */
+  .portrait-preset-btn{width:44px;height:44px;font-size:22px;}
+  .portrait-preset-btn:hover{transform:none;border-color:var(--border-mid);}
+  .portrait-preset-btn:active{border-color:var(--border-strong);transform:scale(0.96);}
+
+  /* ── FILTER PILLS ── */
+  .inv-cat-pill{padding:5px 12px;font-size:11px;min-height:36px;}
+  .inv-cat-pill:hover{border-color:var(--border-mid);color:var(--text-dim);}
+  .inv-cat-pill:active{border-color:var(--gold-dim);background:var(--gold-pale);color:var(--leather-dark);}
+  .inv-cat-pill.active{border-color:var(--gold-dim);background:var(--gold-pale);color:var(--leather-dark);}
+  .inv-filter-btn{min-height:36px;padding:5px 10px;}
+  .inv-filter-btn:hover{border-color:var(--border-mid);color:var(--text-dim);}
+  .inv-filter-btn:active{border-color:var(--border-strong);color:var(--text);}
+
+  /* ── DRAG HANDLES ── */
+  /* Desativar drag em mobile (não funciona bem em touch) */
+  .inv-drag-handle{display:none;}
+  .inventory-item:hover .inv-drag-handle{display:none;}
+  .spell-drag-handle{display:none;}
+  .spell-card:hover .spell-drag-handle{display:none;}
+
+  /* ── DANGER / REST TOGGLES ── */
+  .danger-toggle{min-height:52px;padding:16px 16px;}
+  .danger-toggle:hover{background:transparent;}
+  .danger-toggle:active{background:var(--gold-pale);}
+  .rest-toggle{min-height:52px;padding:16px 16px;}
+  .rest-toggle:hover{background:transparent;}
+  .rest-toggle:active{background:var(--gold-pale);}
+
+  /* ── WEAPON SLOT 2 TOGGLE ── */
+  .weapon-slot-2-toggle:hover{color:rgba(255,240,210,0.45);}
+  .weapon-slot-2-toggle:active{color:rgba(255,240,210,0.75);}
+
+  /* ── CP ADD BTN ── */
+  .cp-add-btn{min-height:44px;}
+  .cp-add-btn:hover{border-color:rgba(255,224,170,0.28);color:rgba(255,240,210,0.6);background:transparent;}
+  .cp-add-btn:active{border-color:rgba(255,201,77,0.5);color:rgba(255,248,230,0.95);background:rgba(255,255,255,0.08);}
+
+  /* ── EQUIP BTNS (dentro do inventário) ── */
+  .equip-btn{min-height:32px;padding:6px 8px;}
+  .equip-btn-w:hover{background:var(--gold-pale);color:var(--ember);}
+  .equip-btn-w:active{background:var(--ember);color:#fff;}
+  .equip-btn-a:hover{background:rgba(47,212,189,0.12);color:var(--teal);}
+  .equip-btn-a:active{background:var(--teal);color:#fff;}
+  .equip-btn-unequip:hover{background:var(--surface2);color:var(--text-dim);}
+  .equip-btn-unequip:active{background:var(--border-mid);color:var(--text);}
+
+  /* ── INV EQUIP SLOT BTNS (modal) ── */
+  .inv-equip-slot-btn{min-height:44px;}
+  .inv-equip-slot-btn:hover{border-color:var(--border-mid);color:var(--text-dim);background:var(--surface2);}
+  .inv-equip-slot-btn:active{border-color:var(--border-strong);color:var(--text);background:var(--gold-pale);}
+  .inv-equip-slot-btn.active-w:hover{background:rgba(255,122,104,0.15);color:var(--ember);}
+  .inv-equip-slot-btn.active-w:active{background:var(--ember);color:#fff;}
+  .inv-equip-slot-btn.active-a:hover{background:rgba(47,212,189,0.14);color:var(--teal);}
+  .inv-equip-slot-btn.active-a:active{background:var(--teal);color:#fff;}
+
+  /* ── SPELL USE BTN ── */
+  .spell-use-btn{min-height:32px;padding:5px 10px;}
+  .spell-use-btn:hover{background:rgba(210,195,170,0.18);color:#8a7560;}
+  .spell-use-btn:active{background:#c8b89a;color:#5c4530;}
 }
 </style>
 </head>

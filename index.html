@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dnd Character Sheet</title>
+<title>Dnd - Ficha de Personagem</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -3676,7 +3676,13 @@ async function doExportExcel(sessionLabel){
     wsSummary['!cols']=[{wch:20},{wch:14},{wch:16},{wch:8},{wch:10},{wch:10},{wch:10},{wch:14},{wch:40}];
     XLSX.utils.book_append_sheet(wb,wsSummary,'Resumo');
 
-    XLSX.writeFile(wb,`${sessionLabel}.xlsx`);
+    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wbout],{type:'application/octet-stream'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`${sessionLabel}.xlsx`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
     showToast('Sessão exportada com sucesso!');
   }catch(err){
     showToast('Erro ao exportar. Tenta novamente.');

@@ -3672,12 +3672,18 @@ async function doExportExcel(sessionLabel){
     ws['!cols']=[{wch:120}];
     XLSX.utils.book_append_sheet(wb,ws,'Sessão');
 
-    // Store each portrait base64 in its own row in a dedicated sheet
+    // Store portrait base64 data split into 20k-char chunks (Excel cell limit is 32,767)
+    const CHUNK=20000;
     if(Object.keys(portraits).length>0){
-      const portraitRows=[['id','portrait_data']];
-      Object.entries(portraits).forEach(([id,data])=>portraitRows.push([id,data]));
+      const portraitRows=[['id','chunk_index','chunk_data']];
+      Object.entries(portraits).forEach(([id,data])=>{
+        const total=Math.ceil(data.length/CHUNK);
+        for(let i=0;i<total;i++){
+          portraitRows.push([id,i,data.slice(i*CHUNK,(i+1)*CHUNK)]);
+        }
+      });
       const wsP=XLSX.utils.aoa_to_sheet(portraitRows);
-      wsP['!cols']=[{wch:36},{wch:10}];
+      wsP['!cols']=[{wch:36},{wch:12},{wch:80}];
       XLSX.utils.book_append_sheet(wb,wsP,'Retratos');
     }
 
@@ -3782,15 +3788,20 @@ async function handleImportFile(input){
       return;
     }
 
-    // Restore portrait images from the dedicated Retratos sheet (if present)
+    // Restore portrait images from the dedicated Retratos sheet (reassemble chunks)
     const portraitSheet=wb.Sheets['Retratos'];
     if(portraitSheet){
       const pRows=XLSX.utils.sheet_to_json(portraitSheet,{header:1});
-      const pMap={};
+      const pChunks={};
+      // skip header row (index 0)
       for(let i=1;i<pRows.length;i++){
-        const [id,data]=pRows[i];
-        if(id&&data)pMap[id]=data;
+        const [id,chunkIdx,chunkData]=pRows[i];
+        if(id==null||chunkData==null)continue;
+        if(!pChunks[id])pChunks[id]=[];
+        pChunks[id][chunkIdx]=chunkData;
       }
+      const pMap={};
+      Object.entries(pChunks).forEach(([id,chunks])=>{pMap[id]=chunks.join('');});
       imported.chars=imported.chars.map(ch=>{
         if(ch.portrait==='__portrait__'&&pMap[ch.id])return Object.assign({},ch,{portrait:pMap[ch.id]});
         return ch;

@@ -3650,8 +3650,16 @@ async function doExportExcel(sessionLabel){
   showToast('A preparar exportação… ⏳');
   try{
     await loadXLSX();
-    // Serialize entire state to a single JSON string stored in cell A1
-    const payload=JSON.stringify({chars:S.chars,activeId:S.activeId,exportedAt:new Date().toISOString(),session:sessionLabel});
+    // Strip portraits out before serializing (base64 images exceed Excel's 32,767-char cell limit)
+    const portraits={};
+    const charsStripped=S.chars.map(ch=>{
+      if(ch.portrait&&ch.portrait.startsWith('data:')){
+        portraits[ch.id]=ch.portrait;
+        return Object.assign({},ch,{portrait:'__portrait__'});
+      }
+      return ch;
+    });
+    const payload=JSON.stringify({chars:charsStripped,activeId:S.activeId,exportedAt:new Date().toISOString(),session:sessionLabel});
     const wb=XLSX.utils.book_new();
     const wsData=[
       ['Diário do Aventureiro — '+sessionLabel],
@@ -3663,6 +3671,15 @@ async function doExportExcel(sessionLabel){
     const ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:120}];
     XLSX.utils.book_append_sheet(wb,ws,'Sessão');
+
+    // Store each portrait base64 in its own row in a dedicated sheet
+    if(Object.keys(portraits).length>0){
+      const portraitRows=[['id','portrait_data']];
+      Object.entries(portraits).forEach(([id,data])=>portraitRows.push([id,data]));
+      const wsP=XLSX.utils.aoa_to_sheet(portraitRows);
+      wsP['!cols']=[{wch:36},{wch:10}];
+      XLSX.utils.book_append_sheet(wb,wsP,'Retratos');
+    }
 
     // Also add a human-readable summary sheet
     const c=getChar();
@@ -3763,6 +3780,21 @@ async function handleImportFile(input){
     if(!imported.chars||!Array.isArray(imported.chars)){
       showToast('Dados inválidos no ficheiro.');
       return;
+    }
+
+    // Restore portrait images from the dedicated Retratos sheet (if present)
+    const portraitSheet=wb.Sheets['Retratos'];
+    if(portraitSheet){
+      const pRows=XLSX.utils.sheet_to_json(portraitSheet,{header:1});
+      const pMap={};
+      for(let i=1;i<pRows.length;i++){
+        const [id,data]=pRows[i];
+        if(id&&data)pMap[id]=data;
+      }
+      imported.chars=imported.chars.map(ch=>{
+        if(ch.portrait==='__portrait__'&&pMap[ch.id])return Object.assign({},ch,{portrait:pMap[ch.id]});
+        return ch;
+      });
     }
 
     // Show confirmation popup

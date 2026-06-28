@@ -1210,10 +1210,52 @@ body{overflow-x:hidden;}
   .inventory-list{grid-template-columns:repeat(2,1fr);}
 }
 
-
+/* ══════════════════════════════════════════
+   MOBILE BLOCK SCREEN
+   Abaixo de 767px mostra-se um aviso a pedir
+   um ecrã de tablet ou computador, e o resto
+   do site fica escondido/inacessível.
+══════════════════════════════════════════ */
+.mobile-block-screen{display:none;}
+@media(max-width:767px){
+  .root-layout{display:none !important;}
+  .mobile-block-screen{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;min-height:100vh;padding:32px 24px;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(ellipse at 50% -10%,rgba(255,234,196,0.35) 0%,transparent 55%),
+      linear-gradient(165deg,#f4c184 0%,#e3a157 45%,#c9853f 100%);
+  }
+  .mobile-block-icon{
+    width:72px;height:72px;border-radius:50%;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));
+    border:3px solid var(--leather-dark);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:22px;box-shadow:var(--sh-md);
+  }
+  .mobile-block-title{
+    font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;
+    color:var(--leather-dark);letter-spacing:0.5px;margin-bottom:12px;
+  }
+  .mobile-block-text{
+    font-family:'Quicksand',sans-serif;font-weight:600;font-size:16px;
+    color:var(--text-dim);max-width:340px;line-height:1.5;
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- MOBILE BLOCK SCREEN: visível apenas abaixo de 767px -->
+<div class="mobile-block-screen">
+  <div class="mobile-block-icon">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#5c361a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  </div>
+  <div class="mobile-block-title">Ecrã demasiado pequeno</div>
+  <div class="mobile-block-text">Este site foi otimizado para tablets ou computadores. Por favor, acede num ecrã maior para a melhor experiência.</div>
+</div>
+
 <div class="root-layout">
 
   <!-- BOTTOM DOCK -->
